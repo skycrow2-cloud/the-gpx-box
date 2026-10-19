@@ -65,7 +65,9 @@
   .info-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;background:var(--panel-2);}
   #btnReset:hover{color:var(--danger);box-shadow:0 0 0 3px rgba(217,105,95,.25);}
   .info-btn:active{transform:scale(.93);}
-  .maplibregl-ctrl-group button.sv-map-btn{display:flex;align-items:center;justify-content:center;color:var(--accent);}
+  .maplibregl-ctrl-group.sv-ctrl{background:rgba(30,37,48,.32);opacity:.85;transition:opacity .15s ease;}
+  .maplibregl-ctrl-group.sv-ctrl:hover{opacity:1;}
+  .maplibregl-ctrl-group button.sv-map-btn{display:flex;align-items:center;justify-content:center;color:var(--accent);background:transparent !important;}
   .maplibregl-ctrl-group button.sv-map-btn svg{width:20px;height:20px;}
   .maplibregl-ctrl-group button.sv-map-btn.sv-active{background:var(--accent);color:#1b1206;}
   #osmPanel .osm-sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
@@ -1652,7 +1654,7 @@
   map.addControl({
     onAdd: function(){
       var box = document.createElement('div');
-      box.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+      box.className = 'maplibregl-ctrl maplibregl-ctrl-group sv-ctrl';
       svMapBtn = document.createElement('button');
       svMapBtn.type = 'button';
       svMapBtn.className = 'sv-map-btn';
