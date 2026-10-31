@@ -1644,8 +1644,13 @@
       el.title = 'Passage obligé n°' + (idx+1) + ' — glisser pour déplacer, double-clic pour supprimer';
       el.style.cssText = 'background:#2b6fd6;color:#fff;font:700 11px sans-serif;padding:3px 6px;' +
         'border-radius:10px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:grab;';
+      // Les clics sur le marqueur ne doivent pas atteindre la carte
+      // (sinon ils placent un départ/arrivée ou ajoutent un point au tracé)
+      el.addEventListener('click', function(ev){ ev.stopPropagation(); });
       el.addEventListener('dblclick', function(ev){
         ev.stopPropagation();
+        ev.preventDefault();
+        if(pendingMapClickTimer){ clearTimeout(pendingMapClickTimer); pendingMapClickTimer = null; }
         routeViaPts.splice(idx, 1);
         renderRouteVias();
       });
@@ -1834,6 +1839,8 @@
     el.style.cssText = 'cursor:grab;opacity:1;width:26px;height:26px;background:' + (kind === 'start' ? '#1c7a3f' : '#d9342b') + ';';
     el.innerHTML = kind === 'start' ? FLAG_START_SVG : FLAG_FINISH_SVG;
     el.title = (kind === 'start' ? 'Départ' : 'Arrivée') + ' de l\'itinéraire — glisser pour déplacer';
+    el.addEventListener('click', function(ev){ ev.stopPropagation(); });
+    el.addEventListener('dblclick', function(ev){ ev.stopPropagation(); ev.preventDefault(); });
     var m = new maplibregl.Marker({ element: el, draggable: true });
     m.on('dragend', function(){
       var ll = m.getLngLat();
