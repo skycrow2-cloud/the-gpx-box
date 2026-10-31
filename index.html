@@ -1766,15 +1766,13 @@
         routeEndPt = null;
         routeViaPts = [];
         renderRouteVias();
-        if(points.length){
-          points = [];
-          finishIndex = null;
-          rebuildMarkers();
-          redraw();
-          drawProfile();
-        }
+        clearComputedTrack();
       }
-      else if(routePickMode === 'end') routeEndPt = e.lngLat;
+      else if(routePickMode === 'end'){
+        // Nouvelle arrivée : l'ancien tracé (et son drapeau d'arrivée) ne correspond plus
+        routeEndPt = e.lngLat;
+        clearComputedTrack();
+      }
       else if(routePickMode === 'via'){
         addRouteVia(e.lngLat);
         routePickMode = null;
@@ -1883,13 +1881,25 @@
     if(routeStartMarker) routeStartMarker.remove();
     if(routeEndMarker) routeEndMarker.remove();
   }
+  function clearComputedTrack(){
+    if(!points.length) return;
+    points = [];
+    finishIndex = null;
+    rebuildMarkers();
+    redraw();
+    drawProfile();
+  }
   document.getElementById('btnRoutePickStart').addEventListener('click', function(){
     this.classList.remove('hint-glow');
+    // Un seul départ : re-cliquer sur « Départ » supprime le précédent
+    if(routeStartPt){ routeStartPt = null; updateRoutePanelUI(); }
     startPicking('start');
   });
   document.getElementById('btnRoutePickEnd').addEventListener('click', function(){
     endBtnClicked = true;
     this.classList.remove('hint-glow');
+    // Une seule arrivée : re-cliquer sur « Arrivée » supprime la précédente
+    if(routeEndPt){ routeEndPt = null; updateRoutePanelUI(); }
     startPicking('end');
   });
   document.getElementById('btnRouteReset').addEventListener('click', function(){
