@@ -460,7 +460,12 @@
     flex-direction:column;
     border-top:1px solid var(--border);
   }
-  #miniMap{ flex:1 1 0; min-height:110px; }
+  #miniMap{ flex:1 1 0; min-height:110px; position:relative; }
+  .mini-north{position:absolute;top:6px;right:6px;z-index:2;width:28px;height:36px;border-radius:6px;
+    background:rgba(20,24,31,.55);display:flex;align-items:center;justify-content:center;pointer-events:none;
+    box-shadow:0 1px 4px rgba(0,0,0,.4);}
+  #miniMap .maplibregl-ctrl-scale{font-size:10px;padding:0 4px;border-width:1.5px;opacity:.85;}
+  #miniMap .maplibregl-ctrl-bottom-left .maplibregl-ctrl{margin:0 0 5px 5px;}
   .profile-wrap h2{
     font-family:'Space Grotesk',sans-serif;
     font-size:15px;
@@ -1286,10 +1291,25 @@
       interactive: false,
       attributionControl: false
     });
+    // Échelle + flèche du nord sur la mini-carte
+    miniMap.addControl(new maplibregl.ScaleControl({ maxWidth: 80, unit: 'metric' }), 'bottom-left');
+    (function(){
+      var n = document.createElement('div');
+      n.className = 'mini-north';
+      n.title = 'Nord';
+      n.innerHTML = '<svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><text x="11" y="9" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">N</text><path d="M11 11 L17 28 L11 24 L5 28 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 11 L11 24 L5 28 Z" fill="#b97a1e"/></svg>';
+      miniMap.getContainer().appendChild(n);
+      miniMap.on('rotate', function(){ n.style.transform = 'rotate(' + (-miniMap.getBearing()) + 'deg)'; });
+    })();
     miniMap.on('load', function(){
-      miniMap.addSource('mini-view', { type:'geojson', data: emptyLine() });
+      miniMap.addSource('mini-view', { type:'geojson', data: { type:'FeatureCollection', features:[] } });
+      // Emprise de la carte principale : voile clair + contour sombre + contour blanc
+      miniMap.addLayer({ id:'mini-view-fill', type:'fill', source:'mini-view',
+        paint:{ 'fill-color':'#e8a33d', 'fill-opacity':0.14 } });
+      miniMap.addLayer({ id:'mini-view-casing', type:'line', source:'mini-view',
+        paint:{ 'line-color':'#14181f', 'line-width':4.5, 'line-opacity':0.55 } });
       miniMap.addLayer({ id:'mini-view-line', type:'line', source:'mini-view',
-        paint:{ 'line-color':'#ffffff', 'line-width':1.5, 'line-dasharray':[2,2], 'line-opacity':0.9 } });
+        paint:{ 'line-color':'#ffffff', 'line-width':2.2, 'line-opacity':1 } });
       miniMap.addSource('mini-track', { type:'geojson', data: emptyLine() });
       miniMap.addLayer({ id:'mini-track-line', type:'line', source:'mini-track',
         paint:{ 'line-color': (typeof trackColor !== 'undefined' ? trackColor : '#e8a33d'), 'line-width':3 } });
@@ -1330,7 +1350,7 @@
     var ring = [[b.getWest(),b.getSouth()],[b.getEast(),b.getSouth()],[b.getEast(),b.getNorth()],
                 [b.getWest(),b.getNorth()],[b.getWest(),b.getSouth()]];
     miniMap.getSource('mini-view').setData({ type:'Feature', properties:{},
-      geometry:{ type:'LineString', coordinates: ring } });
+      geometry:{ type:'Polygon', coordinates: [ring] } });
     if(points.length === 0){
       var c = map.getCenter();
       miniMap.jumpTo({ center:[c.lng, c.lat], zoom: Math.max(1, map.getZoom()-3) });
