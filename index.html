@@ -2105,6 +2105,12 @@
           return;
         }
       }
+      var invite = document.getElementById('startInvite');
+      if(!isDrawingActive() && invite && !invite.classList.contains('hidden') && !points.length){
+        // Clic sur la carte pendant l'invitation de départ : on commence le tracé à la main
+        hideStartInvite();
+        setManualDrawing(true);
+      }
       if(!isDrawingActive()){
         showRouteBanner('Cliquez sur le crayon pour dessiner un tracé');
         clearTimeout(drawHintTimer);
