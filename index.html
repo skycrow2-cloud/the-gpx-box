@@ -888,7 +888,7 @@
         <p><span class="di" data-ic="export"></span>Le bouton « Exporter en .GPX » (flèche vers le haut) demande un nom de fichier puis télécharge la trace, avec les altitudes connues. Il est disponible à partir de deux points.</p>
 
         <h3>Sources des données</h3>
-        <p class="doc-note">Fonds © OpenTopoMap (CC-BY-SA), IGN Belgique – CartoWeb.be, CyclOSM / OpenStreetMap · Sentiers balisés © Waymarked Trails · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS © OpenStreetMap.</p>
+        <p class="doc-note">Fonds © OpenTopoMap (CC-BY-SA), IGN Belgique – CartoWeb.be, IGN France – Plan IGN, ACT – geoportail.lu, CyclOSM / OpenStreetMap · Sentiers balisés © Waymarked Trails · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS © OpenStreetMap.</p>
       </div>
     </div>
   </div>
@@ -1052,6 +1052,8 @@
           <div class="hdr-pop-title">Fond de carte</div>
             <label class="toggle" title="Carte topographique mondiale (OpenStreetMap + relief)"><input type="radio" name="basemap" value="opentopo" checked> OpenTopoMap</label>
             <label class="toggle" title="Carte topographique officielle de l'IGN belge (Belgique uniquement)"><input type="radio" name="basemap" value="cartoweb"> CartoWeb.be (IGN Belgique)</label>
+            <label class="toggle" title="Carte officielle de l'IGN France (France uniquement)"><input type="radio" name="basemap" value="ignfr"> Plan IGN (France)</label>
+            <label class="toggle" title="Carte topographique officielle du Luxembourg (Luxembourg uniquement)"><input type="radio" name="basemap" value="lux"> Geoportail.lu (Luxembourg)</label>
             <label class="toggle" title="OpenStreetMap orienté vélo/VTT : chemins, sentiers, revêtements"><input type="radio" name="basemap" value="cyclosm"> CyclOSM (vélo / VTT)</label>
           <div class="hdr-pop-title">Superpositions</div>
             <label class="toggle"><input type="checkbox" id="chkAerial" autocomplete="off"> Photo aérienne</label>
@@ -1259,6 +1261,21 @@
         maxzoom: 17,
         attribution: '© IGN Belgique – CartoWeb.be'
       },
+      'ignfr': {
+        type: 'raster',
+        tiles: ['https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}'],
+        tileSize: 256,
+        maxzoom: 18,
+        attribution: '© IGN France – Plan IGN'
+      },
+      'geoportail-lu': {
+        type: 'raster',
+        tiles: ['https://wmts3.geoportail.lu/opendata/wmts/topo/GLOBAL_WEBMERCATOR_4_V3/{z}/{x}/{y}.png','https://wmts4.geoportail.lu/opendata/wmts/topo/GLOBAL_WEBMERCATOR_4_V3/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        minzoom: 5,
+        maxzoom: 19,
+        attribution: '© ACT Luxembourg – geoportail.lu'
+      },
       'cyclosm': {
         type: 'raster',
         tiles: ['https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png','https://b.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png','https://c.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'],
@@ -1285,6 +1302,8 @@
       { id:'esri-sat-layer', type:'raster', source:'esri-sat', layout:{visibility:'none'} },
       { id:'opentopo-layer', type:'raster', source:'opentopo', layout:{visibility:'visible'}, paint:{'raster-opacity':1} },
       { id:'cartoweb-layer', type:'raster', source:'cartoweb', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
+      { id:'ignfr-layer', type:'raster', source:'ignfr', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
+      { id:'geoportail-lu-layer', type:'raster', source:'geoportail-lu', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
       { id:'cyclosm-layer', type:'raster', source:'cyclosm', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
       { id:'wmt-hiking-layer', type:'raster', source:'wmt-hiking', layout:{visibility:'none'}, paint:{'raster-opacity':0.9} }
     ],
@@ -1596,6 +1615,8 @@
   var BASEMAPS = {
     opentopo: { layer:'opentopo-layer', name:'OpenTopoMap' },
     cartoweb: { layer:'cartoweb-layer', name:'CartoWeb.be' },
+    ignfr:    { layer:'ignfr-layer',    name:'Plan IGN' },
+    lux:      { layer:'geoportail-lu-layer', name:'Geoportail.lu' },
     cyclosm:  { layer:'cyclosm-layer',  name:'CyclOSM' }
   };
   var currentBase = 'opentopo';
