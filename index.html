@@ -360,6 +360,8 @@
     transition:background .15s ease;
   }
   #resizeHandle:hover, #resizeHandle.active{background:var(--accent);}
+  #btnRoutePickStart.hint-glow{border-color:var(--accent);animation:hintGlow 1.8s ease-in-out infinite;}
+  @keyframes hintGlow{0%,100%{box-shadow:0 0 0 2px rgba(232,163,61,.25);}50%{box-shadow:0 0 0 3px rgba(232,163,61,.4), 0 0 10px rgba(232,163,61,.35);}}
   #sideToggle{
     position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
     width:22px;height:56px;padding:0;border:1px solid var(--border);border-right:none;
@@ -900,7 +902,7 @@
 
     <div style="margin-bottom:6px;">
       <div style="display:flex;align-items:center;gap:6px;">
-        <button class="btn" id="btnRoutePickStart" style="flex:1;font-size:12px;padding:6px 8px;"><span class="pin-ic"></span>Départ</button>
+        <button class="btn hint-glow" id="btnRoutePickStart" style="flex:1;font-size:12px;padding:6px 8px;"><span class="pin-ic"></span>Départ</button>
         <span id="routeStartLabel" style="font-size:11px;color:var(--text-muted);white-space:nowrap;">–</span>
       </div>
       <div id="routeStartHint" style="font-size:10.5px;color:var(--text-muted);margin:2px 0 0 2px;">Sélectionner le point de départ</div>
@@ -1854,6 +1856,7 @@
     if(routeEndMarker) routeEndMarker.remove();
   }
   document.getElementById('btnRoutePickStart').addEventListener('click', function(){
+    this.classList.remove('hint-glow');
     startPicking('start');
   });
   document.getElementById('btnRoutePickEnd').addEventListener('click', function(){
