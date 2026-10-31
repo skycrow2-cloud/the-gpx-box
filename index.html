@@ -1465,8 +1465,22 @@
   var CURSOR_GRABBING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><g fill='%234b5563' stroke='white' stroke-width='1'><rect x='7' y='10' width='11' height='10' rx='3'/><rect x='7' y='7' width='11' height='5' rx='2.2'/></g></svg>\") 12 12, grabbing";
 
   map.getCanvas().style.cursor = CURSOR_TARGET;
-  map.on('dragstart', function(){ map.getCanvas().style.cursor = CURSOR_GRABBING; });
-  map.on('dragend', function(){ map.getCanvas().style.cursor = pointsHidden ? '' : CURSOR_TARGET; });
+  // Main (« grabbing ») dès l'appui pour déplacer la carte, curseur précédent restauré au relâchement
+  var cursorBeforePan = null;
+  function panCursorOn(){
+    var c = map.getCanvas();
+    if(cursorBeforePan === null) cursorBeforePan = c.style.cursor;
+    c.style.cursor = 'grabbing';
+  }
+  function panCursorOff(){
+    if(cursorBeforePan === null) return;
+    map.getCanvas().style.cursor = cursorBeforePan;
+    cursorBeforePan = null;
+  }
+  map.getCanvas().addEventListener('mousedown', function(ev){ if(ev.button === 0) panCursorOn(); });
+  window.addEventListener('mouseup', panCursorOff);
+  map.on('dragstart', panCursorOn);
+  map.on('dragend', panCursorOff);
 
   // ---------- Fenêtre géo : coordonnées du curseur (WGS84 / Lambert 72 / Lambert 2008) ----------
   if(window.proj4){
