@@ -821,7 +821,7 @@
         <ul class="doc-icons">
           <li><span class="di" data-ic="vertex"></span><span><b>Créer un point</b> : clic sur une zone vide de la carte. Les points sont numérotés dans l'ordre.</span></li>
           <li><span class="di" data-ic="start"></span><span><b>Départ</b> : le premier point est marqué d'un drapeau vert.</span></li>
-          <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : <kbd>Entrée</kbd> ou double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge).</span></li>
+          <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : <kbd>Entrée</kbd> ou double-clic (double-tap sur tablette) sur la carte place le dernier point et le marque comme arrivée (drapeau à damier rouge).</span></li>
           <li><span class="di" data-ic="loopflag"></span><span><b>Boucle</b> : départ et arrivée confondus sont signalés par un drapeau à damier blanc.</span></li>
           <li><span class="di">⚠</span><span><b>Aller-retour</b> : quand le tracé repasse en sens inverse sur la même route ou le même chemin, le tronçon est souligné en jaune pointillé et signalé par un ⚠ (survoler pour la longueur).</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Déplacer un point</b> : clic gauche maintenu sur le point, puis glisser.</span></li>
@@ -1964,6 +1964,14 @@
       return;
     }
     if(pointsHidden) return;
+    // Double-clic / double-tap (tablette : Safari ne déclenche pas « dblclick » au doigt) = arrivée
+    var now = Date.now();
+    if(lastMapTap && now - lastMapTap.t < 380 && Math.hypot(e.point.x - lastMapTap.x, e.point.y - lastMapTap.y) < 30){
+      lastMapTap = null;
+      finishByDoubleClick(e.lngLat);
+      return;
+    }
+    lastMapTap = { t: now, x: e.point.x, y: e.point.y };
     if(pendingMapClickTimer){ clearTimeout(pendingMapClickTimer); }
     pendingMapClickTimer = setTimeout(function(){
       pendingMapClickTimer = null;
@@ -3746,13 +3754,26 @@
     if(pointsHidden) return;
     markFinish();
   });
-  map.on('dblclick', function(e){
-    if(e.originalEvent) e.originalEvent.preventDefault();
-    if(pointsHidden) return;
+  var lastMapTap = null, lastFinishAt = 0;
+  function finishByDoubleClick(lngLat){
     if(pendingMapClickTimer){ clearTimeout(pendingMapClickTimer); pendingMapClickTimer = null; }
-    addVertex(e.lngLat);
+    lastFinishAt = Date.now();
+    // Si le 1er clic du double-clic a déjà posé un point au même endroit, on le réutilise
+    var last = points.length ? points[points.length-1] : null;
+    var reuse = false;
+    if(last){
+      var a = map.project([last.lng, last.lat]), b = map.project([lngLat.lng, lngLat.lat]);
+      reuse = Math.hypot(a.x-b.x, a.y-b.y) < 30;
+    }
+    if(!reuse) addVertex(lngLat);
     finishIndex = points.length - 1;
     rebuildMarkers();
+  }
+  map.on('dblclick', function(e){
+    if(e.originalEvent) e.originalEvent.preventDefault();
+    if(pointsHidden || routePickMode) return;
+    if(Date.now() - lastFinishAt < 600) return;   // déjà traité par la détection du double-tap
+    finishByDoubleClick(e.lngLat);
   });
 
   // ---------- Touche Échap : annule la sélection, sinon annule le dernier clic (dernier point ajouté) ----------
