@@ -166,13 +166,14 @@
   .hdr-pop-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;}
   .hdr-pop-title:not(:first-child){margin-top:4px;padding-top:10px;border-top:1px solid var(--border);}
   .hdr-pop input[type=range]{accent-color:var(--accent);}
+  .hdr-pop input[type=radio]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;margin:0;}
   /* Bouton « fond de carte » dans la carte, au-dessus de la barre d'assiette */
   .map-menu{position:absolute;right:14px;bottom:228px;z-index:6;}
   .map-menu > .info-btn{width:32px;height:32px;background:rgba(30,37,48,.45);border-color:rgba(232,163,61,.35);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:.85;}
   .map-menu > .info-btn:hover{opacity:1;background:rgba(30,37,48,.75);}
   .map-menu > .info-btn > svg{width:17px;height:17px;}
-  .map-menu > .hdr-pop{left:auto;right:calc(100% + 8px);top:auto;bottom:0;min-width:190px;}
+  .map-menu > .hdr-pop{left:auto;right:calc(100% + 8px);top:auto;bottom:0;min-width:230px;}
   .header-opts .toggle{white-space:nowrap;font-size:12.5px;}
   .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .header-right .toolbar-right{margin-left:0;}
@@ -886,7 +887,7 @@
         <p><span class="di" data-ic="export"></span>Le bouton « Exporter en .GPX » (flèche vers le haut) demande un nom de fichier puis télécharge la trace, avec les altitudes connues. Il est disponible à partir de deux points.</p>
 
         <h3>Sources des données</h3>
-        <p class="doc-note">Fond topo © OpenTopoMap (CC-BY-SA) · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS © OpenStreetMap.</p>
+        <p class="doc-note">Fonds © OpenTopoMap (CC-BY-SA), IGN Belgique – CartoWeb.be, CyclOSM / OpenStreetMap · Sentiers balisés © Waymarked Trails · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS © OpenStreetMap.</p>
       </div>
     </div>
   </div>
@@ -1045,10 +1046,15 @@
       </div>
       <button id="sideToggle" title="Masquer le panneau latéral" aria-label="Masquer le panneau latéral"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
       <div class="hdr-menu map-menu" id="menuMap">
-        <button class="info-btn" type="button" title="Fond de carte : photo aérienne, relief 3D" aria-label="Fond de carte" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></button>
+        <button class="info-btn" type="button" title="Fond de carte et superpositions" aria-label="Fond de carte" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></button>
         <div class="hdr-pop">
           <div class="hdr-pop-title">Fond de carte</div>
+            <label class="toggle" title="Carte topographique mondiale (OpenStreetMap + relief)"><input type="radio" name="basemap" value="opentopo" checked> OpenTopoMap</label>
+            <label class="toggle" title="Carte topographique officielle de l'IGN belge (Belgique uniquement)"><input type="radio" name="basemap" value="cartoweb"> CartoWeb.be (IGN Belgique)</label>
+            <label class="toggle" title="OpenStreetMap orienté vélo/VTT : chemins, sentiers, revêtements"><input type="radio" name="basemap" value="cyclosm"> CyclOSM (vélo / VTT)</label>
+          <div class="hdr-pop-title">Superpositions</div>
             <label class="toggle"><input type="checkbox" id="chkAerial" autocomplete="off"> Photo aérienne</label>
+            <label class="toggle" title="Itinéraires de randonnée balisés (GR, sentiers locaux)"><input type="checkbox" id="chkHikingTrails" autocomplete="off"> Sentiers balisés</label>
             <label class="toggle"><input type="checkbox" id="chkTerrain"> Relief 3D</label>
         </div>
       </div>
@@ -1245,6 +1251,27 @@
         maxzoom: 17,
         attribution: '© OpenTopoMap (CC-BY-SA)'
       },
+      'cartoweb': {
+        type: 'raster',
+        tiles: ['https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png'],
+        tileSize: 256,
+        maxzoom: 17,
+        attribution: '© IGN Belgique – CartoWeb.be'
+      },
+      'cyclosm': {
+        type: 'raster',
+        tiles: ['https://a.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png','https://b.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png','https://c.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 20,
+        attribution: '© CyclOSM · © contributeurs OpenStreetMap'
+      },
+      'wmt-hiking': {
+        type: 'raster',
+        tiles: ['https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 18,
+        attribution: '© Waymarked Trails (CC-BY-SA)'
+      },
       'terrain-dem': {
         type: 'raster-dem',
         tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -1255,7 +1282,10 @@
     },
     layers: [
       { id:'esri-sat-layer', type:'raster', source:'esri-sat', layout:{visibility:'none'} },
-      { id:'opentopo-layer', type:'raster', source:'opentopo', layout:{visibility:'visible'}, paint:{'raster-opacity':1} }
+      { id:'opentopo-layer', type:'raster', source:'opentopo', layout:{visibility:'visible'}, paint:{'raster-opacity':1} },
+      { id:'cartoweb-layer', type:'raster', source:'cartoweb', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
+      { id:'cyclosm-layer', type:'raster', source:'cyclosm', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
+      { id:'wmt-hiking-layer', type:'raster', source:'wmt-hiking', layout:{visibility:'none'}, paint:{'raster-opacity':0.9} }
     ],
     sky: {
       'sky-color': '#0b1a2a',
@@ -1561,22 +1591,56 @@
   //   Valeur de départ : 30 % d'opacité (= 70 % de transparence)
   //   Sans photo aérienne : OpenTopoMap seule (opaque) et curseur masqué.
   var TOPO_DEFAULT_OPACITY = 30;   // au démarrage : 30 % d'opacité, soit 70 % de transparence
+  // Fonds de carte au choix (le fond choisi se superpose à la photo aérienne quand elle est cochée)
+  var BASEMAPS = {
+    opentopo: { layer:'opentopo-layer', name:'OpenTopoMap' },
+    cartoweb: { layer:'cartoweb-layer', name:'CartoWeb.be' },
+    cyclosm:  { layer:'cyclosm-layer',  name:'CyclOSM' }
+  };
+  var currentBase = 'opentopo';
+  try{ var sb = localStorage.getItem('gpxbox.basemap'); if(BASEMAPS[sb]) currentBase = sb; }catch(e){}
+  (function(){ var r = document.querySelector('input[name="basemap"][value="' + currentBase + '"]'); if(r) r.checked = true; })();
   function applyBasemap(){
     if(!map.getLayer('esri-sat-layer') || !map.getLayer('opentopo-layer')) return;
     var aerial = document.getElementById('chkAerial').checked;
     var rng = document.getElementById('rngTopoOpacity');
     var v = aerial ? (parseInt(rng.value, 10) || 0) : 100;
     map.setLayoutProperty('esri-sat-layer', 'visibility', aerial ? 'visible' : 'none');
-    map.setLayoutProperty('opentopo-layer', 'visibility', v > 0 ? 'visible' : 'none');   // 0 % : plus de tuiles chargées
-    map.setPaintProperty('opentopo-layer', 'raster-opacity', v/100);
+    Object.keys(BASEMAPS).forEach(function(k){
+      var id = BASEMAPS[k].layer, on = (k === currentBase) && v > 0;   // 0 % : plus de tuiles chargées
+      if(!map.getLayer(id)) return;
+      map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+      if(on) map.setPaintProperty(id, 'raster-opacity', v/100);
+    });
+    if(map.getLayer('wmt-hiking-layer'))
+      map.setLayoutProperty('wmt-hiking-layer', 'visibility', document.getElementById('chkHikingTrails').checked ? 'visible' : 'none');
   }
+  document.querySelectorAll('input[name="basemap"]').forEach(function(r){
+    r.addEventListener('change', function(){
+      if(!this.checked) return;
+      currentBase = this.value;
+      try{ localStorage.setItem('gpxbox.basemap', currentBase); }catch(e){}
+      updateTopoOpacityUI();
+      applyBasemap();
+    });
+  });
+  (function(){
+    var chk = document.getElementById('chkHikingTrails');
+    try{ chk.checked = localStorage.getItem('gpxbox.hikingTrails') === '1'; }catch(e){}
+    chk.addEventListener('change', function(){
+      try{ localStorage.setItem('gpxbox.hikingTrails', chk.checked ? '1' : '0'); }catch(e){}
+      applyBasemap();
+    });
+  })();
   function updateTopoOpacityUI(){
     var chk = document.getElementById('chkAerial');
     var rng = document.getElementById('rngTopoOpacity');
     document.getElementById('topoOpacityBox').style.display = chk.checked ? 'flex' : 'none';   // visible seulement avec la photo aérienne
     var op = parseInt(rng.value, 10) || 0;
     document.getElementById('topoOpacityVal').innerHTML = op + '&nbsp;%';
-    document.getElementById('topoOpacityBox').title = 'Opacité d\'OpenTopoMap : ' + op + ' % (transparence : ' + (100-op) + ' %)';
+    var bn = (BASEMAPS[currentBase] || BASEMAPS.opentopo).name;
+    document.querySelector('#topoOpacityBox > span').textContent = bn;
+    document.getElementById('topoOpacityBox').title = 'Opacité de ' + bn + ' : ' + op + ' % (transparence : ' + (100-op) + ' %)';
   }
   document.getElementById('chkAerial').addEventListener('change', function(e){
     if(!e.target.checked) document.getElementById('rngTopoOpacity').value = TOPO_DEFAULT_OPACITY;   // décocher remet le curseur à sa valeur de départ
