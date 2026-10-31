@@ -402,6 +402,16 @@
   .backtrack-mk{width:24px;height:24px;border-radius:50%;background:#f2c94c;color:#1b1206;border:2px solid #fff;
     display:flex;align-items:center;justify-content:center;font:800 14px/1 'Inter',sans-serif;
     box-shadow:0 1px 6px rgba(0,0,0,.55);cursor:help;}
+  #startInvite{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;width:380px;max-width:calc(100% - 120px);
+    padding:12px 14px 12px;border-radius:10px;background:rgba(27,34,44,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(232,163,61,.45);box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--text);}
+  #startInvite.hidden{display:none;}
+  #startInvite .si-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--accent);margin:0 18px 4px 0;display:flex;align-items:center;gap:6px;}
+  #startInvite .si-text{font-size:12.5px;color:var(--text-muted);line-height:1.4;}
+  #startInvite .si-actions{display:flex;gap:8px;margin-top:10px;}
+  #startInvite .si-actions .btn{flex:1;font-size:12.5px;padding:7px 10px;white-space:nowrap;}
+  #startInviteClose{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--text-muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px;}
+  #startInviteClose:hover{color:var(--text);}
   #sideToggle{
     position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
     width:22px;height:56px;padding:0;border:1px solid var(--border);border-right:none;
@@ -1034,6 +1044,15 @@
 
   <div class="body">
     <div id="map">
+      <div id="startInvite" role="dialog" aria-label="Point de départ">
+        <button id="startInviteClose" type="button" title="Fermer" aria-label="Fermer">×</button>
+        <div class="si-title"><span class="pin-ic"></span>Par où commence votre parcours ?</div>
+        <div class="si-text">Cliquez sur la carte pour placer le <b>point de départ</b>, puis les points suivants.</div>
+        <div class="si-actions">
+          <button class="btn" id="startInviteManual" type="button">Tracer à la main</button>
+          <button class="btn accent" id="startInviteRoute" type="button">Suggérer un itinéraire</button>
+        </div>
+      </div>
       <div id="routePickBanner" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20;padding:8px 16px;border-radius:8px;background:rgba(232,163,61,.72);color:#14181f;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.5);white-space:nowrap;pointer-events:none;"></div>
       <div class="search-box" id="searchBox">
         <div class="search-row">
@@ -1870,7 +1889,21 @@
     renderRouteVias();
   }
 
+  // Invitation au démarrage : proposer de placer un point de départ
+  function hideStartInvite(){ var el = document.getElementById('startInvite'); if(el) el.classList.add('hidden'); }
+  (function(){
+    var el = document.getElementById('startInvite');
+    ['click','dblclick','mousedown','pointerdown'].forEach(function(t){ el.addEventListener(t, function(ev){ ev.stopPropagation(); }); });
+    document.getElementById('startInviteClose').addEventListener('click', hideStartInvite);
+    document.getElementById('startInviteManual').addEventListener('click', hideStartInvite);
+    document.getElementById('startInviteRoute').addEventListener('click', function(){
+      hideStartInvite();
+      document.getElementById('btnRouteSuggest').click();
+    });
+  })();
+
   function showRouteBanner(text){
+    hideStartInvite();
     var el = document.getElementById('routePickBanner');
     el.textContent = text;
     el.style.display = 'block';
@@ -3169,6 +3202,7 @@
     clearTimeout(backtrackTimer);
     backtrackTimer = setTimeout(updateBacktracks, 300);
 
+    if(points.length) hideStartInvite();
     document.getElementById('statPoints').textContent = points.length;
     document.getElementById('btnExport').disabled = points.length < 2;
     document.getElementById('btnFitBounds').disabled = points.length < 1;
