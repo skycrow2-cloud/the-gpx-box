@@ -360,7 +360,7 @@
     transition:background .15s ease;
   }
   #resizeHandle:hover, #resizeHandle.active{background:var(--accent);}
-  #btnRoutePickStart.hint-glow{border-color:var(--accent);animation:hintGlow 1.8s ease-in-out infinite;}
+  #btnRoutePickStart.hint-glow, #btnRoutePickEnd.hint-glow{border-color:var(--accent);animation:hintGlow 1.8s ease-in-out infinite;}
   @keyframes hintGlow{0%,100%{box-shadow:0 0 0 2px rgba(232,163,61,.25);}50%{box-shadow:0 0 0 3px rgba(232,163,61,.4), 0 0 10px rgba(232,163,61,.35);}}
   #sideToggle{
     position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
@@ -1817,9 +1817,12 @@
     startBtn.title = isLoop ? 'Sélectionner le point de départ/arrivée' : 'Sélectionner le point de départ';
     document.getElementById('routeStartHint').textContent = isLoop ? 'Sélectionner le point de départ/arrivée' : 'Sélectionner le point de départ';
   });
+  var endBtnClicked = false;
   function updateRoutePanelUI(){
     document.getElementById('routeStartLabel').textContent = routeStartPt ? (routeStartPt.lat.toFixed(4)+', '+routeStartPt.lng.toFixed(4)) : '–';
     document.getElementById('routeEndLabel').textContent = routeEndPt ? (routeEndPt.lat.toFixed(4)+', '+routeEndPt.lng.toFixed(4)) : '–';
+    // Arrivée en surbrillance une fois le départ choisi, jusqu'au premier clic dessus
+    document.getElementById('btnRoutePickEnd').classList.toggle('hint-glow', !!routeStartPt && !routeEndPt && !endBtnClicked);
     renderRoutePickMarkers();
   }
 
@@ -1860,6 +1863,8 @@
     startPicking('start');
   });
   document.getElementById('btnRoutePickEnd').addEventListener('click', function(){
+    endBtnClicked = true;
+    this.classList.remove('hint-glow');
     startPicking('end');
   });
   document.getElementById('btnRouteReset').addEventListener('click', function(){
