@@ -1464,7 +1464,16 @@
   var CURSOR_GRAB = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><g fill='%234b5563' stroke='white' stroke-width='1'><rect x='8' y='11' width='8' height='9' rx='3'/><rect x='6' y='6' width='3' height='9' rx='1.5'/><rect x='9.5' y='4' width='3' height='11' rx='1.5'/><rect x='13' y='4.5' width='3' height='10.5' rx='1.5'/><rect x='16.5' y='6' width='3' height='9' rx='1.5'/></g></svg>\") 12 12, grab";
   var CURSOR_GRABBING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><g fill='%234b5563' stroke='white' stroke-width='1'><rect x='7' y='10' width='11' height='10' rx='3'/><rect x='7' y='7' width='11' height='5' rx='2.2'/></g></svg>\") 12 12, grabbing";
 
-  map.getCanvas().style.cursor = CURSOR_TARGET;
+  // Curseur : flèche au repos ; cible pendant la création d'un tracé ; croix pendant un choix sur la carte
+  var manualDrawing = false;
+  function updateIdleCursor(){
+    if(cursorBeforePan !== null && cursorBeforePan !== undefined) return;   // pendant un déplacement : la main reste
+    var c = map.getCanvas();
+    if(routePickMode || (typeof svPickMode !== 'undefined' && svPickMode)){ c.style.cursor = 'crosshair'; return; }
+    var drawing = !pointsHidden && finishIndex === null && (manualDrawing || points.length > 0);
+    c.style.cursor = drawing ? CURSOR_TARGET : 'default';
+  }
+  map.getCanvas().style.cursor = 'default';
   // Main (« grabbing ») dès l'appui pour déplacer la carte, curseur précédent restauré au relâchement
   var cursorBeforePan = null;
   function panCursorOn(){
@@ -1474,8 +1483,8 @@
   }
   function panCursorOff(){
     if(cursorBeforePan === null) return;
-    map.getCanvas().style.cursor = cursorBeforePan;
     cursorBeforePan = null;
+    updateIdleCursor();
   }
   map.getCanvas().addEventListener('mousedown', function(ev){ if(ev.button === 0) panCursorOn(); });
   window.addEventListener('mouseup', panCursorOff);
@@ -1593,14 +1602,14 @@
       paint:{ 'line-color':trackColor, 'line-width':trackWidth, 'line-opacity':0.9 }
     });
 
-    map.on('mouseenter', 'route-line', function(){ map.getCanvas().style.cursor = pointsHidden ? '' : 'pointer'; });
+    map.on('mouseenter', 'route-line', function(){ if(cursorBeforePan === null && !routePickMode && !pointsHidden) map.getCanvas().style.cursor = 'pointer'; });
     map.on('mousemove', 'route-line', function(e){
       if(points.length < 2) return;
       var res = nearestDistanceOnTrack(e.lngLat);
       showProfilePositionAtDistance(res.dist);
     });
     map.on('mouseleave', 'route-line', function(){
-      map.getCanvas().style.cursor = '';
+      updateIdleCursor();
       hideProfilePosition();
     });
 
@@ -1777,12 +1786,10 @@
 
   // Rappel de la dernière adresse recherchée (Entrée = se relocaliser dessus)
   var LAST_SEARCH_KEY = 'gpxbox.lastSearch';
+  // Le champ est vidé à chaque chargement de la page ; la dernière adresse reste rappelable (Entrée) pendant la session
   var lastSearch = null;
-  try{ lastSearch = JSON.parse(localStorage.getItem(LAST_SEARCH_KEY) || 'null'); }catch(e){}
-  if(lastSearch && lastSearch.display_name){
-    searchInput.value = lastSearch.display_name;
-    searchInput.title = 'Dernière recherche : ' + lastSearch.display_name + ' — Entrée pour s\'y relocaliser';
-  }
+  try{ localStorage.removeItem(LAST_SEARCH_KEY); }catch(e){}
+  searchInput.value = '';
   searchInput.addEventListener('keydown', function(e){
     if(e.key === 'Escape'){ searchResults.style.display = 'none'; return; }
     if(e.key !== 'Enter') return;
@@ -1847,7 +1854,6 @@
     searchResults.style.display = 'none';
     lastSearch = { display_name: res.display_name, lat: res.lat, lon: res.lon };
     searchInput.title = 'Dernière recherche : ' + res.display_name + ' — Entrée pour s\'y relocaliser';
-    try{ localStorage.setItem(LAST_SEARCH_KEY, JSON.stringify(lastSearch)); }catch(e){}
   }
 
   document.addEventListener('click', function(e){
@@ -1911,7 +1917,11 @@
     var el = document.getElementById('startInvite');
     ['click','dblclick','mousedown','pointerdown'].forEach(function(t){ el.addEventListener(t, function(ev){ ev.stopPropagation(); }); });
     document.getElementById('startInviteClose').addEventListener('click', hideStartInvite);
-    document.getElementById('startInviteManual').addEventListener('click', hideStartInvite);
+    document.getElementById('startInviteManual').addEventListener('click', function(){
+      hideStartInvite();
+      manualDrawing = true;
+      updateIdleCursor();
+    });
     document.getElementById('startInviteRoute').addEventListener('click', function(){
       hideStartInvite();
       document.getElementById('btnRouteSuggest').click();
@@ -1972,7 +1982,7 @@
       map.getCanvas().style.cursor = 'crosshair';
       showRouteBanner('Cliquez sur la carte pour ouvrir Google Street View');
     } else {
-      map.getCanvas().style.cursor = pointsHidden ? '' : CURSOR_TARGET;
+      updateIdleCursor();
       hideRouteBanner();
     }
   }
@@ -2001,14 +2011,14 @@
       else if(routePickMode === 'via'){
         addRouteVia(e.lngLat);
         routePickMode = null;
-        map.getCanvas().style.cursor = '';
+        updateIdleCursor();
         document.getElementById('routeStatus').textContent = '';
         hideRouteBanner();
         return;
       }
       var wasStart = (routePickMode === 'start');
       routePickMode = null;
-      map.getCanvas().style.cursor = '';
+      updateIdleCursor();
       updateRoutePanelUI();
       // Enchaînement : après le départ (mode point à point), on passe direct au picking arrivée
       if(wasStart && document.getElementById('routeMode').value === 'p2p' && !routeEndPt){
@@ -2135,7 +2145,7 @@
     routeViaPts = [];
     renderRouteVias();
     routePickMode = null;
-    map.getCanvas().style.cursor = '';
+    updateIdleCursor();
     hideRouteBanner();
     setRouteProgress(false);
     document.getElementById('routeStatus').textContent = '';
@@ -3100,6 +3110,7 @@
   }
 
   function rebuildMarkers(){
+    if(typeof updateIdleCursor === "function") setTimeout(updateIdleCursor, 0);
     markers.forEach(function(m){ m.remove(); });
     markers = [];
     markerEls = [];
@@ -3197,7 +3208,7 @@
       document.getElementById('coordSelectedLabel').textContent = '';
       document.getElementById('btnCoordUpdate').disabled = true;
     }
-    if(!routePickMode) map.getCanvas().style.cursor = pointsHidden ? '' : CURSOR_TARGET;
+    updateIdleCursor();
     refreshHint();
   }
 
@@ -3219,6 +3230,7 @@
     backtrackTimer = setTimeout(updateBacktracks, 300);
 
     if(points.length) hideStartInvite();
+    updateIdleCursor();
     document.getElementById('statPoints').textContent = points.length;
     document.getElementById('btnExport').disabled = points.length < 2;
     document.getElementById('btnFitBounds').disabled = points.length < 1;
@@ -3923,6 +3935,7 @@
 
   document.getElementById('btnReset').addEventListener('click', function(){
     if(points.length && !confirm('Effacer tout le tracé ?')) return;
+    manualDrawing = false;
     points = [];
     finishIndex = null;
     rebuildMarkers();
