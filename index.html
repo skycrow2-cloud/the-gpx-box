@@ -406,6 +406,9 @@
     padding:9px 11px;border-radius:8px;background:rgba(30,37,48,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.45);color:var(--text);}
   #startInvite.hidden{display:none;}
+  #startInvite{cursor:grab;touch-action:none;user-select:none;}
+  #startInvite.dragging{cursor:grabbing;}
+  #startInvite button{cursor:pointer;}
   #startInvite .si-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;color:var(--accent);margin:0 16px 2px 0;display:flex;align-items:center;gap:5px;}
   #startInvite .si-text{font-size:11.5px;color:var(--text-muted);line-height:1.35;}
   #startInvite .si-actions{display:flex;gap:6px;margin-top:7px;}
@@ -1937,6 +1940,30 @@
     var el = document.getElementById('startInvite');
     ['click','dblclick','mousedown','pointerdown'].forEach(function(t){ el.addEventListener(t, function(ev){ ev.stopPropagation(); }); });
     document.getElementById('startInviteClose').addEventListener('click', hideStartInvite);
+    // Déplaçable : glisser la fenêtre (hors boutons) pour la mettre ailleurs sur la carte
+    var drag = null;
+    el.addEventListener('pointerdown', function(ev){
+      if(ev.target.closest('button')) return;
+      var host = el.offsetParent || el.parentNode, hr = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+      drag = { dx: ev.clientX - r.left, dy: ev.clientY - r.top, hr: hr, w: r.width, h: r.height };
+      el.style.transform = 'none';
+      el.style.left = (r.left - hr.left) + 'px';
+      el.style.top = (r.top - hr.top) + 'px';
+      el.classList.add('dragging');
+      el.setPointerCapture(ev.pointerId);
+      ev.preventDefault();
+    });
+    el.addEventListener('pointermove', function(ev){
+      if(!drag) return;
+      var x = ev.clientX - drag.hr.left - drag.dx, y = ev.clientY - drag.hr.top - drag.dy;
+      x = Math.max(4, Math.min(drag.hr.width - drag.w - 4, x));
+      y = Math.max(4, Math.min(drag.hr.height - drag.h - 4, y));
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+    });
+    function endDrag(){ if(drag){ drag = null; el.classList.remove('dragging'); } }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
     document.getElementById('startInviteManual').addEventListener('click', function(){
       hideStartInvite();
       manualDrawing = true;
