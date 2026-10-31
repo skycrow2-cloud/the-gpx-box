@@ -358,7 +358,8 @@
   .maplibregl-ctrl-group button:hover{background:rgba(255,255,255,.08);}
   .maplibregl-ctrl-attrib{background:transparent !important;font-size:10px;}
   .maplibregl-ctrl-attrib a{color:var(--text-muted);}
-  .maplibregl-ctrl-icon{filter:invert(1) brightness(1.6);}
+  /* Icônes des contrôles (zoom, boussole…) en orange (#e8a33d) */
+  .maplibregl-ctrl-icon{filter:invert(72%) sepia(53%) saturate(626%) hue-rotate(343deg) brightness(95%) contrast(91%);}
 
   .maplibregl-ctrl-scale{
     background:var(--panel);
@@ -1362,7 +1363,7 @@
       miniMap.addLayer({ id:'mini-view-casing', type:'line', source:'mini-view',
         paint:{ 'line-color':'#14181f', 'line-width':4.5, 'line-opacity':0.55 } });
       miniMap.addLayer({ id:'mini-view-line', type:'line', source:'mini-view',
-        paint:{ 'line-color':'#ffffff', 'line-width':2.2, 'line-opacity':1 } });
+        paint:{ 'line-color':'#e8a33d', 'line-width':2.4, 'line-opacity':1 } });
       miniMap.addSource('mini-track', { type:'geojson', data: emptyLine() });
       miniMap.addLayer({ id:'mini-track-line', type:'line', source:'mini-track',
         paint:{ 'line-color': (typeof trackColor !== 'undefined' ? trackColor : '#e8a33d'), 'line-width':3 } });
