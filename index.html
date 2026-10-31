@@ -3642,14 +3642,6 @@
     var eles = points.map(function(p){ return p.ele; });
     var haveEle = eles.filter(function(e){ return typeof e==='number'; }).length >= 2;
 
-    if(points.length < 2 || !haveEle){
-      empty.style.display = 'block';
-      svg.style.display = 'none';
-      return;
-    }
-    empty.style.display = 'none';
-    svg.style.display = 'block';
-
     // Hauteur logique adaptée à la taille réelle du graphique (pas de texte déformé).
     var W=600, H=170, padL=36, padR=12, padT=24, padB=22;
     var holder = document.getElementById('profileHolder');
@@ -3657,6 +3649,36 @@
       H = Math.max(110, Math.round(W * holder.clientHeight / holder.clientWidth));
     }
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+    if(points.length < 2 || !haveEle){
+      // Profil vide : on garde le cadre (axes X et Y, grille) pour montrer où il apparaîtra
+      profileGeo = null;
+      empty.style.display = 'none';
+      svg.style.display = 'block';
+      var NS = svgNS;
+      var add = function(tag, attrs){ var n = document.createElementNS(NS, tag); for(var k in attrs) n.setAttribute(k, attrs[k]); svg.appendChild(n); return n; };
+      var t0 = add('text', { x:6, y:13, 'font-size':10.5, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+      t0.textContent = 'Altitude (m)';
+      for(var gy0=1; gy0<=4; gy0++){
+        var yy = H-padB - (H-padT-padB)*gy0/4;
+        add('line', { x1:padL, x2:W-padR, y1:yy, y2:yy, stroke:'#2a323c', 'stroke-width':1, 'stroke-dasharray':'3,4' });
+      }
+      add('line', { x1:padL, x2:W-padR, y1:H-padB, y2:H-padB, stroke:'#3a4350', 'stroke-width':1.2 });   // axe X
+      add('line', { x1:padL, x2:padL, y1:padT, y2:H-padB, stroke:'#3a4350', 'stroke-width':1.2 });       // axe Y
+      for(var gx0=0; gx0<=5; gx0++){
+        var xx = padL + (W-padL-padR)*gx0/5;
+        add('line', { x1:xx, x2:xx, y1:H-padB, y2:H-padB+3, stroke:'#3a4350', 'stroke-width':1 });
+      }
+      var lx = add('text', { x:W-padR, y:H-padB+14, 'text-anchor':'end', 'font-size':10, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+      lx.textContent = 'Distance (km)';
+      var lz = add('text', { x:padL-6, y:H-padB+3.5, 'text-anchor':'end', 'font-size':10, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+      lz.textContent = '0';
+      var msg = add('text', { x:(padL+W-padR)/2, y:(padT+H-padB)/2+4, 'text-anchor':'middle', 'font-size':11.5, fill:'#6b7380', 'font-family':"'Inter',sans-serif" });
+      msg.textContent = points.length < 2 ? 'Placez au moins deux points pour afficher le profil' : 'Altitudes en cours de chargement…';
+      return;
+    }
+    empty.style.display = 'none';
+    svg.style.display = 'block';
     var cum=[0];
     for(var i=1;i<points.length;i++) cum.push(cum[i-1]+haversine(points[i-1],points[i]));
     var totalD = cum[cum.length-1] || 1;
