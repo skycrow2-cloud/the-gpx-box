@@ -1929,10 +1929,8 @@
     }
     if(routePickMode){
       if(routePickMode === 'start'){
-        // Nouveau départ : l'arrivée déjà choisie est conservée ; trace et passages obligés sont effacés
+        // Nouveau départ : l'arrivée et les passages obligés déjà choisis sont conservés ; seule la trace est effacée
         routeStartPt = e.lngLat;
-        routeViaPts = [];
-        renderRouteVias();
         clearComputedTrack();
       }
       else if(routePickMode === 'end'){
@@ -2841,10 +2839,19 @@
     var btn = document.getElementById('btnRouteCompute');
     btn.disabled = true;
 
+    var directKm = null, viaKm = null;
     var routePromise = mode === 'loop'
       ? fetchLoopRouteToTarget(routeStartPt, distKm, act, statusEl, routeViaPts.slice())
       : fetchRoute(waypoints, act, statusEl).then(function(c){
-          return act === 'moto' ? c : removeSpurs(c, protectPts);
+          c = act === 'moto' ? c : removeSpurs(c, protectPts);
+          if(!protectPts.length) return c;
+          // Avec passages obligés : calcul du trajet direct pour mesurer l'allongement
+          viaKm = routeDistanceKm(c);
+          statusEl.textContent = 'Comparaison avec le trajet direct…';
+          return fetchRoute([routeStartPt, routeEndPt], act, { textContent:'' }).then(function(d){
+            directKm = routeDistanceKm(act === 'moto' ? d : removeSpurs(d, []));
+            return c;
+          }).catch(function(){ return c; });
         });
 
     routePromise.then(function(coords){
@@ -2857,13 +2864,32 @@
 
       if(applyRouteCoords(coords)){
         hideRoutePickMarkers();
+        var fmtKm = function(v){ return v.toFixed(1).replace('.', ','); };
+        var keepOpen = false;
         if(mode === 'loop'){
-          statusEl.textContent = 'Boucle créée : ' + routeDistanceKm(coords).toFixed(1) +
-            ' km (souhaité ~' + distKm.toFixed(1) + ' km).';
+          var gotKm = routeDistanceKm(coords);
+          var tol = Math.max(0.5, distKm * 0.12);   // même tolérance que la recherche de boucle (±12 %)
+          var diff = gotKm - distKm;
+          if(Math.abs(diff) > tol){
+            keepOpen = true;
+            statusEl.innerHTML = '<span style="color:var(--accent);font-weight:600;">⚠ Boucle de ' + fmtKm(gotKm) + ' km, hors de la plage souhaitée (' +
+              fmtKm(distKm - tol) + ' – ' + fmtKm(distKm + tol) + ' km) : ' + (diff > 0 ? '+' : '−') + fmtKm(Math.abs(diff)) + ' km.</span>' +
+              (routeViaPts.length ? '<br>Les passages obligés imposent probablement ce détour.' : '');
+          } else {
+            statusEl.textContent = 'Boucle créée : ' + fmtKm(gotKm) + ' km (souhaité ~' + fmtKm(distKm) + ' km).';
+          }
+        } else if(directKm !== null && viaKm !== null){
+          keepOpen = true;
+          var extra = viaKm - directKm, pct = directKm > 0 ? Math.round(extra / directKm * 100) : 0;
+          statusEl.innerHTML = 'Itinéraire créé : <b>' + fmtKm(viaKm) + ' km</b>. ' +
+            (extra > 0.05
+              ? '<span style="color:var(--accent);font-weight:600;">Les passages obligés l\'allongent de +' + fmtKm(extra) + ' km (+' + pct + ' %)</span> par rapport au trajet direct (' + fmtKm(directKm) + ' km).'
+              : 'Les passages obligés n\'allongent pas le trajet direct.');
         } else {
           statusEl.textContent = 'Itinéraire créé (' + coords.length + ' points).';
         }
-        document.getElementById('routePanel').style.display = 'none';
+        // Le panneau reste ouvert quand il y a une information à lire
+        if(!keepOpen) document.getElementById('routePanel').style.display = 'none';
       } else {
         statusEl.textContent = '';
       }
