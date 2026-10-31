@@ -1274,9 +1274,9 @@
       },
       'geoportail-lu': {
         type: 'raster',
-        tiles: ['https://wmts3.geoportail.lu/opendata/wmts/topo/GLOBAL_WEBMERCATOR_4_V3/{z}/{x}/{y}.png','https://wmts4.geoportail.lu/opendata/wmts/topo/GLOBAL_WEBMERCATOR_4_V3/{z}/{x}/{y}.png'],
+        // Couche « topomap » (carte topographique multi-échelles) du service open data de l'ACT
+        tiles: ['https://wmts3.geoportail.lu/opendata/wmts/topomap/GLOBAL_WEBMERCATOR/{z}/{x}/{y}.png','https://wmts4.geoportail.lu/opendata/wmts/topomap/GLOBAL_WEBMERCATOR/{z}/{x}/{y}.png'],
         tileSize: 256,
-        minzoom: 5,
         maxzoom: 19,
         attribution: '© ACT Luxembourg – geoportail.lu'
       },
