@@ -413,8 +413,8 @@
   #startInvite .si-text{font-size:11.5px;color:var(--text-muted);line-height:1.35;}
   #startInvite .si-actions{display:flex;gap:6px;margin-top:7px;}
   #startInvite .si-actions .btn{flex:1;font-size:11.5px;padding:5px 8px;white-space:nowrap;}
-  #startInvite .si-actions .btn:not(.accent){background:rgba(20,24,31,.5);}
-  #startInvite .si-actions .btn.accent{opacity:.92;}
+  #startInvite .si-actions .btn{background:rgba(20,24,31,.5);}
+  #startInvite .si-actions .btn:hover{background:rgba(232,163,61,.18);border-color:rgba(232,163,61,.55);}
   #startInviteClose{position:absolute;top:4px;right:6px;background:none;border:none;color:var(--text-muted);font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;}
   #startInviteClose:hover{color:var(--text);}
   /* Pastille orange sur un menu / outil en cours d'utilisation */
@@ -1060,7 +1060,7 @@
         <div class="si-text">Cliquez sur la carte pour placer le <b>point de départ</b>, puis les points suivants.</div>
         <div class="si-actions">
           <button class="btn" id="startInviteManual" type="button">Tracer à la main</button>
-          <button class="btn accent" id="startInviteRoute" type="button">Suggérer un itinéraire</button>
+          <button class="btn" id="startInviteRoute" type="button">Suggérer un itinéraire</button>
         </div>
       </div>
       <div id="routePickBanner" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20;padding:8px 16px;border-radius:8px;background:rgba(232,163,61,.72);color:#14181f;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.5);white-space:nowrap;pointer-events:none;"></div>
