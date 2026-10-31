@@ -1363,7 +1363,8 @@
     miniMap = new maplibregl.Map({
       container: 'miniMap',
       style: { version:8, sources:{ opentopo: style.sources.opentopo },
-               layers:[{ id:'opentopo-layer', type:'raster', source:'opentopo' }] },
+               layers:[{ id:'opentopo-layer', type:'raster', source:'opentopo',
+                         paint:{ 'raster-saturation':-0.55, 'raster-contrast':-0.1 } }] },
       center: [5.55, 50.45], zoom: 9,
       interactive: false,
       attributionControl: false
