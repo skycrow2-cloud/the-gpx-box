@@ -21,6 +21,10 @@
     --accent:#e8a33d;
     --accent-dark:#c9861f;
     --accent-soft: rgba(232,163,61,.16);
+    /* Transparence commune des éléments posés sur la carte */
+    --glass: rgba(30,37,48,.48);
+    --glass-hover: rgba(30,37,48,.66);
+    --glass-strong: rgba(27,34,44,.8);
     --accent-2:#49b6c4;
     --danger:#d9695f;
   }
@@ -72,7 +76,7 @@
   #btnExport img, .di-flip img{transform:rotate(180deg);}
   #btnReset:hover{color:var(--danger);box-shadow:0 0 0 3px rgba(217,105,95,.25);}
   .info-btn:active{transform:scale(.93);}
-  .maplibregl-ctrl-group.sv-ctrl{background:rgba(30,37,48,.32);opacity:.85;transition:opacity .15s ease;}
+  .maplibregl-ctrl-group.sv-ctrl{background:var(--glass);transition:opacity .15s ease;}
   .maplibregl-ctrl-group.sv-ctrl:hover{opacity:1;}
   .maplibregl-ctrl-group button.sv-map-btn{display:flex;align-items:center;justify-content:center;color:var(--accent);background:transparent !important;}
   .maplibregl-ctrl-group button.sv-map-btn svg{width:20px;height:20px;}
@@ -175,12 +179,12 @@
   /* Bouton « fond de carte » dans la carte, au-dessus de la barre d'assiette */
   /* Bouton « fond de carte » : contrôle de carte, sous Street View */
   .map-menu{position:relative;}
-  .map-menu > .info-btn{width:29px;height:29px;border-radius:4px;background:rgba(30,37,48,.32);border:1px solid var(--border);
-    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 0 0 2px rgba(0,0,0,.1);opacity:.85;}
-  .map-menu > .info-btn:hover{opacity:1;background:rgba(30,37,48,.6);box-shadow:none;}
+  .map-menu > .info-btn{width:29px;height:29px;border-radius:4px;background:var(--glass);border:1px solid rgba(232,163,61,.35);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,.5);}
+  .map-menu > .info-btn:hover{opacity:1;background:var(--glass-hover);box-shadow:none;}
   .map-menu > .info-btn > svg{width:17px;height:17px;}
   .map-menu > .hdr-pop{left:auto;right:calc(100% + 8px);top:0;bottom:auto;min-width:230px;
-    background:rgba(27,34,44,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+    background:var(--glass-strong);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
   .header-opts .toggle{white-space:nowrap;font-size:12.5px;}
   .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .header-right .toolbar-right{margin-left:0;}
@@ -205,7 +209,7 @@
     gap:6px;
     padding:6px;
     border-radius:6px;
-    background:rgba(30,37,48,.6);
+    background:var(--glass);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     border:1px solid rgba(232,163,61,.35);
@@ -238,7 +242,7 @@
     gap:6px;
     padding:6px 9px;
     border-radius:6px;
-    background:rgba(30,37,48,.6);
+    background:var(--glass);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     border:1px solid rgba(232,163,61,.35);
@@ -278,7 +282,7 @@
     height:120px;
     border-radius:999px;
     border:1px solid rgba(232,163,61,.35);
-    background:rgba(30,37,48,.6);
+    background:var(--glass);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     box-shadow:0 4px 14px rgba(0,0,0,.5);
@@ -350,7 +354,7 @@
   #map{flex:2;min-width:0;min-height:300px;position:relative;}
 
   .maplibregl-ctrl-group{
-    background:rgba(30,37,48,.6);
+    background:var(--glass);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     border:1px solid rgba(232,163,61,.35);
@@ -403,7 +407,7 @@
     display:flex;align-items:center;justify-content:center;font:800 14px/1 'Inter',sans-serif;
     box-shadow:0 1px 6px rgba(0,0,0,.55);cursor:help;}
   #startInvite{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;width:300px;max-width:calc(100% - 120px);
-    padding:9px 11px;border-radius:8px;background:rgba(30,37,48,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    padding:9px 11px;border-radius:8px;background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.45);color:var(--text);}
   #startInvite.hidden{display:none;}
   #startInvite{cursor:grab;touch-action:none;user-select:none;}
@@ -424,7 +428,7 @@
   #sideToggle{
     position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
     width:22px;height:56px;padding:0;border:1px solid var(--border);border-right:none;
-    border-radius:8px 0 0 8px;background:rgba(30,37,48,.78);color:var(--accent);
+    border-radius:8px 0 0 8px;background:var(--glass);color:var(--accent);
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
     display:flex;align-items:center;justify-content:center;cursor:pointer;
     box-shadow:-2px 2px 8px rgba(0,0,0,.35);transition:background .15s ease;
@@ -697,7 +701,7 @@
     gap:10px;
     padding:7px 14px;
     border-radius:999px;
-    background:rgba(30,37,48,.42);
+    background:var(--glass);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     border:1px solid rgba(232,163,61,.35);
