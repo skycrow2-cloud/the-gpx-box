@@ -362,6 +362,9 @@
   #resizeHandle:hover, #resizeHandle.active{background:var(--accent);}
   #btnRoutePickStart.hint-glow, #btnRoutePickEnd.hint-glow{border-color:var(--accent);animation:hintGlow 1.8s ease-in-out infinite;}
   @keyframes hintGlow{0%,100%{box-shadow:0 0 0 2px rgba(232,163,61,.25);}50%{box-shadow:0 0 0 3px rgba(232,163,61,.4), 0 0 10px rgba(232,163,61,.35);}}
+  .backtrack-mk{width:24px;height:24px;border-radius:50%;background:#f2c94c;color:#1b1206;border:2px solid #fff;
+    display:flex;align-items:center;justify-content:center;font:800 14px/1 'Inter',sans-serif;
+    box-shadow:0 1px 6px rgba(0,0,0,.55);cursor:help;}
   #sideToggle{
     position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
     width:22px;height:56px;padding:0;border:1px solid var(--border);border-right:none;
@@ -777,6 +780,7 @@
           <li><span class="di" data-ic="start"></span><span><b>Départ</b> : le premier point est marqué d'un drapeau vert.</span></li>
           <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : <kbd>Entrée</kbd> ou double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge).</span></li>
           <li><span class="di" data-ic="loopflag"></span><span><b>Boucle</b> : départ et arrivée confondus sont signalés par un drapeau à damier blanc.</span></li>
+          <li><span class="di">⚠</span><span><b>Aller-retour</b> : quand le tracé repasse en sens inverse sur la même route ou le même chemin, le tronçon est souligné en jaune pointillé et signalé par un ⚠ (survoler pour la longueur).</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Déplacer un point</b> : clic gauche maintenu sur le point, puis glisser.</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Insérer un point</b> : clic sur le tracé, à l'endroit voulu. <b>Supprimer</b> : clic droit sur le point.</span></li>
           <li><span class="di" data-ic="empty"></span><span><b>Annuler</b> : <kbd>Échap</kbd> annule la sélection en cours, sinon le dernier point ajouté.</span></li>
@@ -1394,6 +1398,12 @@
   applyTrackColor(trackColor);
 
   map.on('load', function(){
+    map.addSource('backtrack', { type:'geojson', data: { type:'FeatureCollection', features:[] } });
+    map.addLayer({
+      id:'backtrack-line', type:'line', source:'backtrack',
+      layout:{ 'line-cap':'round', 'line-join':'round' },
+      paint:{ 'line-color':'#f2c94c', 'line-width':11, 'line-opacity':0.75, 'line-dasharray':[1.2, 0.9] }
+    });
     map.addSource('route', { type:'geojson', data: emptyLine() });
     map.addLayer({
       id:'route-line',
@@ -2882,6 +2892,10 @@
     var n = points.length;
     var txt = n === 0 ? 'Aucun point placé' : n + ' point' + (n>1?'s':'') + ' placé' + (n>1?'s':'');
     if(pointsHidden) txt += ' · points cachés (lecture seule)';
+    if(backtrackRuns && backtrackRuns.length){
+      var bl = backtrackRuns.reduce(function(a, r){ return a + r.len; }, 0);
+      txt += ' · ⚠ ' + backtrackRuns.length + ' aller-retour' + (backtrackRuns.length > 1 ? 's' : '') + ' (' + fmtBacktrackLen(bl) + ')';
+    }
     document.getElementById('liveHint').textContent = txt;
   }
 
@@ -2928,6 +2942,9 @@
       });
     }
 
+    clearTimeout(backtrackTimer);
+    backtrackTimer = setTimeout(updateBacktracks, 300);
+
     document.getElementById('statPoints').textContent = points.length;
     document.getElementById('btnExport').disabled = points.length < 2;
     document.getElementById('btnFitBounds').disabled = points.length < 1;
@@ -2944,6 +2961,92 @@
       clearTimeout(weatherTimer);
       weatherTimer = setTimeout(fetchWeather, 600);
     }
+  }
+
+  // ---------- Détection des allers-retours sur un même chemin ----------
+  // Le tracé est rééchantillonné tous les ~8 m. Un échantillon est « en retour » s'il passe
+  // à moins de BT_TOL m d'une portion antérieure du tracé, parcourue dans le sens opposé.
+  // Les tronçons contigus de plus de BT_MIN m sont signalés.
+  var BT_STEP = 8, BT_TOL = 14, BT_MIN = 60, BT_GAP = 30;
+  var backtrackTimer = null, backtrackRuns = [], backtrackMarkers = [];
+
+  function fmtBacktrackLen(m){ return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1).replace('.', ',') + ' km'; }
+
+  function detectBacktracks(pts){
+    if(pts.length < 3) return [];
+    var lat0 = pts[0].lat * Math.PI / 180, kx = 111320 * Math.cos(lat0), ky = 110540;
+    var S = [];
+    var cum = 0;
+    for(var i=0;i<pts.length-1;i++){
+      var ax = pts[i].lng*kx, ay = pts[i].lat*ky, bx = pts[i+1].lng*kx, by = pts[i+1].lat*ky;
+      var len = Math.hypot(bx-ax, by-ay);
+      if(len < 0.01) continue;
+      var ux = (bx-ax)/len, uy = (by-ay)/len, n = Math.max(1, Math.ceil(len / BT_STEP));
+      for(var k=0;k<n;k++){
+        var t = k/n;
+        S.push({ x: ax+(bx-ax)*t, y: ay+(by-ay)*t, ux: ux, uy: uy, d: cum+len*t,
+                 lng: pts[i].lng+(pts[i+1].lng-pts[i].lng)*t, lat: pts[i].lat+(pts[i+1].lat-pts[i].lat)*t });
+      }
+      cum += len;
+    }
+    var last = pts[pts.length-1];
+    if(S.length) S.push({ x:last.lng*kx, y:last.lat*ky, ux:S[S.length-1].ux, uy:S[S.length-1].uy, d:cum, lng:last.lng, lat:last.lat });
+    if(S.length < 3) return [];
+
+    var CELL = BT_TOL * 2, grid = {}, flag = new Array(S.length);
+    function key(cx, cy){ return cx + ':' + cy; }
+    var pending = 0; // indexe les échantillons avec un décalage pour ignorer le voisinage immédiat
+    for(var a=0;a<S.length;a++){
+      var s = S[a];
+      while(pending < a && s.d - S[pending].d > BT_TOL * 4){
+        var q = S[pending], kk = key(Math.floor(q.x/CELL), Math.floor(q.y/CELL));
+        (grid[kk] || (grid[kk] = [])).push(pending);
+        pending++;
+      }
+      var cx = Math.floor(s.x/CELL), cy = Math.floor(s.y/CELL), hit = false;
+      for(var gx=cx-1; gx<=cx+1 && !hit; gx++) for(var gy=cy-1; gy<=cy+1 && !hit; gy++){
+        var cell = grid[key(gx, gy)];
+        if(!cell) continue;
+        for(var c=0;c<cell.length;c++){
+          var o = S[cell[c]];
+          if(Math.hypot(o.x-s.x, o.y-s.y) <= BT_TOL && (o.ux*s.ux + o.uy*s.uy) < -0.6){ hit = true; break; }
+        }
+      }
+      flag[a] = hit;
+    }
+
+    var runs = [], cur = null;
+    for(var b=0;b<S.length;b++){
+      if(flag[b]){
+        if(cur && S[b].d - S[cur.end].d <= BT_GAP) cur.end = b;
+        else { if(cur) runs.push(cur); cur = { start:b, end:b }; }
+      }
+    }
+    if(cur) runs.push(cur);
+    return runs.map(function(r){
+      var seg = S.slice(r.start, r.end+1);
+      return { len: S[r.end].d - S[r.start].d, coords: seg.map(function(p){ return [p.lng, p.lat]; }),
+               mid: seg[Math.floor(seg.length/2)] };
+    }).filter(function(r){ return r.len >= BT_MIN; });
+  }
+
+  function updateBacktracks(){
+    backtrackRuns = detectBacktracks(points);
+    var src = map.getSource && map.getSource('backtrack');
+    if(src) src.setData({ type:'FeatureCollection', features: backtrackRuns.map(function(r){
+      return { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:r.coords } };
+    }) });
+    backtrackMarkers.forEach(function(m){ m.remove(); });
+    backtrackMarkers = backtrackRuns.map(function(r){
+      var el = document.createElement('div');
+      el.className = 'backtrack-mk';
+      el.textContent = '!';
+      el.title = 'Aller-retour sur le même chemin : ~' + fmtBacktrackLen(r.len);
+      el.addEventListener('click', function(ev){ ev.stopPropagation(); });
+      el.addEventListener('dblclick', function(ev){ ev.stopPropagation(); ev.preventDefault(); });
+      return new maplibregl.Marker({ element: el }).setLngLat([r.mid.lng, r.mid.lat]).addTo(map);
+    });
+    refreshHint();
   }
 
   // ---------- Distances (Haversine) ----------
