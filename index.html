@@ -1929,9 +1929,8 @@
     }
     if(routePickMode){
       if(routePickMode === 'start'){
-        // Nouveau départ : on repart de zéro (trace existante, arrivée et passages obligés effacés)
+        // Nouveau départ : l'arrivée déjà choisie est conservée ; trace et passages obligés sont effacés
         routeStartPt = e.lngLat;
-        routeEndPt = null;
         routeViaPts = [];
         renderRouteVias();
         clearComputedTrack();
