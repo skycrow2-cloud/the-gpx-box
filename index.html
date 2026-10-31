@@ -261,6 +261,8 @@
     padding:1px;
   }
   .coord-expand{display:none;}
+  #coordToggle .pin-ic{margin-right:0;}
+  .coord-box:not(.expanded){padding:6px;}
   .coord-box.expanded .coord-expand{display:inline-flex;align-items:center;}
   .coord-box select{
     background:transparent;
@@ -1376,7 +1378,7 @@
       container: 'miniMap',
       style: { version:8, sources:{ opentopo: style.sources.opentopo },
                layers:[{ id:'opentopo-layer', type:'raster', source:'opentopo',
-                         paint:{ 'raster-saturation':-0.55, 'raster-contrast':-0.1 } }] },
+                         paint:{ 'raster-saturation':-0.55, 'raster-contrast':-0.35, 'raster-brightness-min':0.08 } }] },
       center: [5.55, 50.45], zoom: 9,
       interactive: false,
       attributionControl: false
@@ -1397,9 +1399,9 @@
       miniMap.addLayer({ id:'mini-view-fill', type:'fill', source:'mini-view',
         paint:{ 'fill-color':'#e8a33d', 'fill-opacity':0.14 } });
       miniMap.addLayer({ id:'mini-view-casing', type:'line', source:'mini-view',
-        paint:{ 'line-color':'#14181f', 'line-width':4.5, 'line-opacity':0.55 } });
+        paint:{ 'line-color':'#14181f', 'line-width':2.8, 'line-opacity':0.4 } });
       miniMap.addLayer({ id:'mini-view-line', type:'line', source:'mini-view',
-        paint:{ 'line-color':'#e8a33d', 'line-width':2.4, 'line-opacity':1 } });
+        paint:{ 'line-color':'#e8a33d', 'line-width':1.4, 'line-opacity':1 } });
       miniMap.addSource('mini-track', { type:'geojson', data: emptyLine() });
       miniMap.addLayer({ id:'mini-track-line', type:'line', source:'mini-track',
         paint:{ 'line-color': (typeof trackColor !== 'undefined' ? trackColor : '#e8a33d'), 'line-width':3 } });
