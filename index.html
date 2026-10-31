@@ -402,15 +402,17 @@
   .backtrack-mk{width:24px;height:24px;border-radius:50%;background:#f2c94c;color:#1b1206;border:2px solid #fff;
     display:flex;align-items:center;justify-content:center;font:800 14px/1 'Inter',sans-serif;
     box-shadow:0 1px 6px rgba(0,0,0,.55);cursor:help;}
-  #startInvite{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;width:380px;max-width:calc(100% - 120px);
-    padding:12px 14px 12px;border-radius:10px;background:rgba(27,34,44,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-    border:1px solid rgba(232,163,61,.45);box-shadow:0 6px 20px rgba(0,0,0,.5);color:var(--text);}
+  #startInvite{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;width:300px;max-width:calc(100% - 120px);
+    padding:9px 11px;border-radius:8px;background:rgba(30,37,48,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.45);color:var(--text);}
   #startInvite.hidden{display:none;}
-  #startInvite .si-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--accent);margin:0 18px 4px 0;display:flex;align-items:center;gap:6px;}
-  #startInvite .si-text{font-size:12.5px;color:var(--text-muted);line-height:1.4;}
-  #startInvite .si-actions{display:flex;gap:8px;margin-top:10px;}
-  #startInvite .si-actions .btn{flex:1;font-size:12.5px;padding:7px 10px;white-space:nowrap;}
-  #startInviteClose{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--text-muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px;}
+  #startInvite .si-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;color:var(--accent);margin:0 16px 2px 0;display:flex;align-items:center;gap:5px;}
+  #startInvite .si-text{font-size:11.5px;color:var(--text-muted);line-height:1.35;}
+  #startInvite .si-actions{display:flex;gap:6px;margin-top:7px;}
+  #startInvite .si-actions .btn{flex:1;font-size:11.5px;padding:5px 8px;white-space:nowrap;}
+  #startInvite .si-actions .btn:not(.accent){background:rgba(20,24,31,.5);}
+  #startInvite .si-actions .btn.accent{opacity:.92;}
+  #startInviteClose{position:absolute;top:4px;right:6px;background:none;border:none;color:var(--text-muted);font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;}
   #startInviteClose:hover{color:var(--text);}
   #sideToggle{
     position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
