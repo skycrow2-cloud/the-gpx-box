@@ -405,9 +405,12 @@
   #resizeHandle:hover, #resizeHandle.active{background:var(--accent);}
   #btnRoutePickStart.hint-glow, #btnRoutePickEnd.hint-glow{border-color:var(--accent);animation:hintGlow 1.8s ease-in-out infinite;}
   @keyframes hintGlow{0%,100%{box-shadow:0 0 0 2px rgba(232,163,61,.25);}50%{box-shadow:0 0 0 3px rgba(232,163,61,.4), 0 0 10px rgba(232,163,61,.35);}}
-  .backtrack-mk{width:24px;height:24px;border-radius:50%;background:#f2c94c;color:#1b1206;border:2px solid #fff;
-    display:flex;align-items:center;justify-content:center;font:800 14px/1 'Inter',sans-serif;
-    box-shadow:0 1px 6px rgba(0,0,0,.55);cursor:help;}
+  .backtrack-mk{width:26px;height:26px;border-radius:50%;background:#d9342b;color:#fff;border:2px solid #fff;
+    display:flex;align-items:center;justify-content:center;font:900 16px/1 'Inter',sans-serif;
+    box-shadow:0 1px 6px rgba(0,0,0,.55);cursor:help;animation:btPulse 1.8s ease-out infinite;}
+  @keyframes btPulse{0%{box-shadow:0 1px 6px rgba(0,0,0,.55),0 0 0 0 rgba(217,52,43,.65);}
+    70%{box-shadow:0 1px 6px rgba(0,0,0,.55),0 0 0 11px rgba(217,52,43,0);}100%{box-shadow:0 1px 6px rgba(0,0,0,.55),0 0 0 0 rgba(217,52,43,0);}}
+  @media (prefers-reduced-motion: reduce){.backtrack-mk{animation:none;}}
   #startInvite{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;width:300px;max-width:calc(100% - 120px);
     padding:9px 11px;border-radius:8px;background:rgba(20,25,34,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.45);color:var(--text);}
@@ -663,9 +666,9 @@
   .di-v{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.5);
     font:700 11px 'Inter',sans-serif;color:var(--track-text,#1b1206);background:var(--track-color,var(--accent));}
   .di-v svg{width:13px;height:13px;display:block;}
-  #cursorLabel{position:fixed;z-index:4000;display:none;pointer-events:none;padding:2px 8px 2px 7px;border-radius:5px;
-    background:rgba(20,25,34,.9);border:1px solid rgba(232,163,61,.55);border-left:4px solid var(--accent);color:var(--text);
-    font:700 11.5px 'Space Grotesk',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);}
+  #cursorLabel{position:fixed;z-index:4000;display:none;pointer-events:none;padding:1px 6px 1px 5px;border-radius:4px;
+    background:rgba(20,25,34,.9);border:1px solid rgba(232,163,61,.55);border-left:3px solid var(--accent);color:var(--text);
+    font:700 10px/1.35 'Space Grotesk',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);}
   #cursorLabel.cl-start{border-left-color:#2fe07a;}
   #cursorLabel.cl-end{border-left-color:#d9342b;}
   #cursorLabel.cl-via{border-left-color:#2b6fd6;}
@@ -858,7 +861,7 @@
           <li><span class="di" data-ic="start"></span><span><b>Départ</b> : le premier point est marqué d'un drapeau vert.</span></li>
           <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : <kbd>Entrée</kbd> ou double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge).</span></li>
           <li><span class="di" data-ic="loopflag"></span><span><b>Boucle</b> : départ et arrivée confondus sont signalés par un drapeau à damier blanc.</span></li>
-          <li><span class="di">⚠</span><span><b>Aller-retour</b> : quand le tracé repasse en sens inverse sur la même route ou le même chemin, le tronçon est souligné en jaune pointillé et signalé par un ⚠ (survoler pour la longueur).</span></li>
+          <li><span class="di"><span class="backtrack-mk" style="width:20px;height:20px;font-size:13px;animation:none;">!</span></span><span><b>Aller-retour</b> : quand le tracé repasse en sens inverse sur la même route ou le même chemin, même sur quelques dizaines de mètres, le tronçon est souligné en jaune pointillé et signalé par un <b>!</b> rouge (survoler pour la longueur).</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Déplacer un point</b> : clic gauche maintenu sur le point, puis glisser.</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Insérer un point</b> : clic sur le tracé, à l'endroit voulu. <b>Supprimer</b> : clic droit sur le point.</span></li>
           <li><span class="di" data-ic="empty"></span><span><b>Annuler</b> : <kbd>Échap</kbd> annule la sélection en cours, sinon le dernier point ajouté.</span></li>
@@ -1543,8 +1546,8 @@
     if(!st){ el.style.display = 'none'; return; }
     el.textContent = st[0];
     el.className = 'cl-' + st[1];
-    el.style.left = (cursorLabelPos.x + 14) + 'px';
-    el.style.top = (cursorLabelPos.y + 16) + 'px';
+    el.style.left = (cursorLabelPos.x + 12) + 'px';
+    el.style.top = (cursorLabelPos.y + 13) + 'px';
     el.style.display = 'block';
   }
   map.getCanvas().addEventListener('mousemove', function(ev){ cursorLabelPos = { x: ev.clientX, y: ev.clientY }; updateCursorLabel(); });
@@ -3075,7 +3078,7 @@
           var btLen = bts.reduce(function(a, r){ return a + r.len; }, 0);
           statusEl.insertAdjacentHTML('beforeend', '<br><span style="color:#f2c94c;font-weight:600;">⚠ ' + bts.length + ' aller-retour' + (bts.length > 1 ? 's' : '') +
             ' sur le même chemin (~' + fmtBacktrackLen(btLen) + ')' + (routeViaPts.length ? ', sans doute pour atteindre un passage obligé' : '') +
-            ' : souligné en jaune sur la carte.</span>');
+            ' : souligné en jaune et marqué d\'un <b>!</b> rouge sur la carte.</span>');
         }
         // Le panneau reste ouvert quand il y a une information à lire
         if(!keepOpen) document.getElementById('routePanel').style.display = 'none';
@@ -4240,15 +4243,24 @@
       [function(){ return document.getElementById('searchToggle'); }, function(){ return has('searchBox', 'expanded'); }],
       [function(){ return document.getElementById('coordToggle'); }, function(){ return has('coordBox', 'expanded'); }]
     ];
+    // Une seule pastille : celle de l'outil actif, c.-à-d. le plus récemment utilisé parmi ceux en cours
+    var stamps = rules.map(function(){ return 0; }), clock = 0;
     function sync(){
-      rules.forEach(function(r){
+      var winner = -1;
+      rules.forEach(function(r, i){
+        if(r[0]() && r[1]() && (winner < 0 || stamps[i] > stamps[winner])) winner = i;
+      });
+      rules.forEach(function(r, i){
         var el = r[0]();
         if(!el) return;
         el.classList.add('in-use-host');
-        el.classList.toggle('in-use', !!r[1]());
+        el.classList.toggle('in-use', i === winner);
       });
     }
-    document.addEventListener('click', function(){ setTimeout(sync, 0); }, true);
+    document.addEventListener('click', function(ev){
+      rules.forEach(function(r, i){ var el = r[0](); if(el && el.contains(ev.target)) stamps[i] = ++clock; });
+      setTimeout(sync, 0);
+    }, true);
     document.addEventListener('keyup', function(){ setTimeout(sync, 0); });
     setInterval(sync, 500);
     sync();
