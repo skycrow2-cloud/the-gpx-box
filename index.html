@@ -28,6 +28,7 @@
     /* Infobulles : légèrement translucides, flou d'arrière-plan pour rester lisibles */
     --tip-bg: rgba(27,34,44,.72);
     --tip-blur: blur(6px);
+    --tip-radius: 8px;
     --accent-2:#49b6c4;
     --danger:#d9695f;
   }
@@ -346,7 +347,7 @@
     transform:translateY(50%);
     z-index:6;
     padding:3px 8px;
-    border-radius:6px;
+    border-radius:var(--tip-radius);
     background:var(--tip-bg);
     -webkit-backdrop-filter:var(--tip-blur);
     backdrop-filter:var(--tip-blur);
@@ -575,14 +576,14 @@
     font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;
     font-size:12px;
     padding:6px 9px;
-    border-radius:5px;
+    border-radius:var(--tip-radius);
     display:none;
     white-space:nowrap;
     z-index:1000;
   }
 
   /* Infobulles des boutons et éléments : translucides (remplacent les infobulles natives, opaques) */
-  #uiTip{position:fixed;z-index:6000;display:none;pointer-events:none;max-width:280px;padding:5px 9px;border-radius:6px;
+  #uiTip{position:fixed;z-index:6000;display:none;pointer-events:none;max-width:280px;padding:5px 9px;border-radius:var(--tip-radius);
     background:var(--tip-bg);-webkit-backdrop-filter:var(--tip-blur);backdrop-filter:var(--tip-blur);
     border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.35);
     color:var(--text);font:500 12px/1.4 'Inter',sans-serif;}
@@ -598,7 +599,7 @@
     font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;
     font-size:12px;
     padding:6px 9px;
-    border-radius:5px;
+    border-radius:var(--tip-radius);
     display:none;
     white-space:nowrap;
     z-index:2000;
@@ -712,7 +713,7 @@
   .di-v{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.5);
     font:700 11px 'Inter',sans-serif;color:var(--track-text,#1b1206);background:var(--track-color,var(--accent));}
   .di-v svg{width:13px;height:13px;display:block;}
-  #cursorLabel{position:fixed;z-index:4000;display:none;pointer-events:none;padding:1px 6px 1px 5px;border-radius:4px;
+  #cursorLabel{position:fixed;z-index:4000;display:none;pointer-events:none;padding:1px 6px 1px 5px;border-radius:calc(var(--tip-radius) - 2px);
     background:var(--tip-bg);-webkit-backdrop-filter:var(--tip-blur);backdrop-filter:var(--tip-blur);
     border:1px solid rgba(232,163,61,.55);border-left:3px solid var(--accent);color:var(--text);
     font:700 10px/1.35 'Space Grotesk',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);}
