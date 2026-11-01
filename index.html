@@ -132,6 +132,23 @@
   .gpx-status.err{color:var(--danger);}
   .gpx-status.warn{color:#f2c94c;}
   .gpx-status.ok{color:var(--accent);}
+  /* Travail en cours (recherche OSM / Overpass, téléchargement…) : roue, barre animée et chrono */
+  @keyframes gpxSpin{to{transform:rotate(360deg);}}
+  .gpx-status.working::before, #osmStatus.working::before, .osm-trace .d.working::before, .gpx-results button.loading::before{
+    content:'';display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1px;box-sizing:border-box;
+    border:2px solid rgba(232,163,61,.3);border-top-color:var(--accent);border-radius:50%;animation:gpxSpin .8s linear infinite;}
+  .gpx-busy{margin-top:7px;}
+  .gpx-busy[hidden]{display:none;}
+  .gpx-busy-track{height:5px;border-radius:3px;background:var(--panel-2);border:1px solid var(--border);overflow:hidden;position:relative;}
+  .gpx-busy-bar{position:absolute;top:0;bottom:0;width:35%;background:var(--accent);animation:routeProgressSlide 1.1s ease-in-out infinite;}
+  .gpx-busy-time{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;color:var(--text-muted);margin-top:3px;font-variant-numeric:tabular-nums;}
+  .gpx-results.busy button{opacity:.45;cursor:wait;}
+  .gpx-results.busy button.loading{opacity:1;background:var(--accent-soft);}
+  #btnGpxOsmGo.busy{cursor:wait;opacity:.75;}
+  .search-box.loading .search-toggle-btn{position:relative;}
+  .search-box.loading .search-toggle-btn::before{content:'';position:absolute;inset:-3px;border-radius:50%;
+    border:2px solid rgba(232,163,61,.25);border-top-color:var(--accent);animation:gpxSpin .8s linear infinite;pointer-events:none;}
+  @media (prefers-reduced-motion: reduce){ .gpx-busy-bar{animation-duration:2.5s;} }
   .gpx-results{list-style:none;margin:8px 0 0;padding:0;max-height:210px;overflow-y:auto;border:1px solid var(--border);border-radius:7px;}
   .gpx-results:empty{display:none;}
   .gpx-results button{display:block;width:100%;text-align:left;padding:7px 9px;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);font-family:inherit;font-size:12.5px;cursor:pointer;}
@@ -1136,6 +1153,7 @@
         <p class="gpx-note" id="gpxNoteRoute" hidden>Un nom ou un numéro de balisage (GR 5…) est cherché dans la zone visible de la carte. Un lien <a href="https://hiking.waymarkedtrails.org/" target="_blank" rel="noopener">Waymarked Trails</a> ou openstreetmap.org/relation/… est importé directement.</p>
         <button class="btn accent" id="btnGpxOsmGo" style="width:100%;">Importer la trace</button>
         <div class="gpx-status" id="gpxImportStatus" aria-live="polite"></div>
+        <div class="gpx-busy" id="gpxBusy" hidden><div class="gpx-busy-track"><div class="gpx-busy-bar"></div></div><div class="gpx-busy-time"><span id="gpxBusyHint">En cours…</span><span id="gpxBusyTime">0 s</span></div></div>
         <ul class="gpx-results" id="gpxResults"></ul>
         <div class="gpx-fallback" id="gpxFallback" hidden>
           <span id="gpxFallbackText"></span>
@@ -1268,7 +1286,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.23 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.24 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -2018,7 +2036,11 @@
 
   function runSearch(q, pickFirst){
     var url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&accept-language=fr&q=' + encodeURIComponent(q);
+    var sbox = document.getElementById('searchBox'), myRun = (runSearch.seq = (runSearch.seq || 0) + 1);
+    sbox.classList.add('loading');
+    function done(){ if(runSearch.seq === myRun) sbox.classList.remove('loading'); }
     fetch(url).then(function(r){ return r.json(); }).then(function(results){
+      done();
       searchResults.innerHTML = '';
       if(!results || !results.length){
         searchResults.style.display = 'none';
@@ -2036,6 +2058,7 @@
       });
       searchResults.style.display = 'block';
     }).catch(function(){
+      done();
       searchResults.style.display = 'none';
     });
   }
@@ -5015,6 +5038,7 @@
     var el = document.getElementById('osmStatus');
     el.innerHTML = text || '';
     el.classList.toggle('err', !!isErr);
+    el.classList.toggle('working', !isErr && /…$/.test(el.textContent));
   }
   function osmCanAuth(){
     return location.protocol !== 'file:' && window.isSecureContext && window.crypto && crypto.subtle;
@@ -5106,7 +5130,7 @@
 
   function osmLoadTraces(){
     var list = document.getElementById('osmTraceList');
-    list.innerHTML = '<div class="osm-trace"><span class="d">Chargement…</span></div>';
+    list.innerHTML = '<div class="osm-trace"><span class="d working">Chargement de vos traces…</span></div>';
     return osmApi('/user/gpx_files.json').then(function(r){ return r.json(); }).then(function(d){
       var traces = (d && d.traces) || [];
       // /user/details exige le droit « lire les préférences » : le nom est repris des traces
@@ -5252,7 +5276,7 @@
 
   function setGpxStatus(text, kind){
     var st = document.getElementById('gpxImportStatus');
-    st.className = 'gpx-status' + (kind ? ' ' + kind : '');
+    st.className = 'gpx-status' + (kind ? ' ' + kind : '') + (!kind && /…$/.test(text || '') ? ' working' : '');
     st.textContent = text || '';
   }
   function parseTraceId(s){
@@ -5310,6 +5334,7 @@
     document.getElementById('gpxNoteTrace').hidden = gpxSource !== 'trace';
     document.getElementById('gpxNoteRoute').hidden = gpxSource !== 'route';
     var v = gpxOsmInput.value.trim(), btn = document.getElementById('btnGpxOsmGo');
+    if(gpxBusy){ btn.textContent = 'Recherche en cours…'; btn.disabled = true; return; }
     if(gpxSource === 'trace'){
       btn.textContent = 'Importer la trace';
       btn.disabled = gpxBusy || !parseTraceId(v);
@@ -5343,7 +5368,32 @@
   });
   document.getElementById('btnGpxOsmGo').addEventListener('click', runGpxOsmImport);
 
-  function setGpxBusy(b){ gpxBusy = b; updateGpxImportUI(); }
+  var gpxBusyTimer = null;
+  function setGpxBusy(b){
+    gpxBusy = b;
+    updateGpxImportUI();
+    var box = document.getElementById('gpxBusy'), btn = document.getElementById('btnGpxOsmGo');
+    clearInterval(gpxBusyTimer);
+    btn.classList.toggle('busy', b);
+    if(!b){
+      box.hidden = true;
+      var res = document.getElementById('gpxResults');
+      res.classList.remove('busy');
+      res.querySelectorAll('button.loading').forEach(function(x){ x.classList.remove('loading'); });
+      return;
+    }
+    var t0 = Date.now();
+    function tick(){
+      var sec = Math.floor((Date.now() - t0) / 1000);
+      document.getElementById('gpxBusyTime').textContent = sec + ' s';
+      document.getElementById('gpxBusyHint').textContent = sec >= 8
+        ? 'Les serveurs OpenStreetMap peuvent être lents, patientez…' : 'En cours…';
+    }
+    tick();
+    box.hidden = false;
+    btn.textContent = 'Recherche en cours…';
+    gpxBusyTimer = setInterval(tick, 500);
+  }
 
   function runGpxOsmImport(){
     if(gpxBusy) return;
@@ -5623,8 +5673,10 @@
         btn.appendChild(sm);
         btn.addEventListener('click', function(){
           if(gpxBusy) return;
+          list.classList.add('busy');
+          btn.classList.add('loading');
           setGpxBusy(true);
-          importOsmRelation(r.id).then(function(){ setGpxBusy(false); });
+          importOsmRelation(r.id).then(function(){ setGpxBusy(false); }, function(){ setGpxBusy(false); });
         });
         li.appendChild(btn);
         list.appendChild(li);
