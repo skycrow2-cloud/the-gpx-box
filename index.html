@@ -663,6 +663,13 @@
   .di-v{width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.5);
     font:700 11px 'Inter',sans-serif;color:var(--track-text,#1b1206);background:var(--track-color,var(--accent));}
   .di-v svg{width:13px;height:13px;display:block;}
+  #cursorLabel{position:fixed;z-index:4000;display:none;pointer-events:none;padding:2px 8px 2px 7px;border-radius:5px;
+    background:rgba(20,25,34,.9);border:1px solid rgba(232,163,61,.55);border-left:4px solid var(--accent);color:var(--text);
+    font:700 11.5px 'Space Grotesk',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.45);}
+  #cursorLabel.cl-start{border-left-color:#2fe07a;}
+  #cursorLabel.cl-end{border-left-color:#d9342b;}
+  #cursorLabel.cl-via{border-left-color:#2b6fd6;}
+  .via-pill{display:inline-block;background:#2b6fd6;color:#fff;font:700 10px/1.25 sans-serif;padding:1px 5px;border-radius:9px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);vertical-align:middle;margin:1px 0;}
   .di-pill{background:#2b6fd6;color:#fff;font:700 11px sans-serif;padding:3px 6px;border-radius:10px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);}
   .di-dot{width:14px;height:14px;border-radius:50%;background:#49b6c4;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6);box-sizing:content-box;}
   .di-swatch{width:26px;height:18px;border:1px solid var(--border);border-radius:4px;background:var(--track-color,var(--accent));}
@@ -880,7 +887,7 @@
         <h3>Suggérer un itinéraire</h3>
         <ul class="doc-icons">
           <li><span class="di" data-ic="route"></span><span>Choisir <b>Point à point</b> ou <b>Boucle</b> et l'activité : <b>🥾 Rando</b>, <b>🚵 VTT</b> ou <b>🏍️ Moto</b>.</span></li>
-          <li><span class="di" data-ic="pin"></span><span><b>Départ</b>, puis <b>🏁 Arrivée</b> (point à point) : cliquer chaque point sur la carte.</span></li>
+          <li><span class="di" data-ic="pin"></span><span><b>Départ</b>, puis <b>🏁 Arrivée</b> (point à point) : cliquer chaque point sur la carte. Une étiquette (Départ, Arrivée, Point de passage) suit le curseur pendant le choix.</span></li>
           <li><span class="di" data-ic="via"></span><span><b>Passages obligés</b> : « + Ajouter » puis clic sur la carte. Les points P1, P2… sont parcourus dans cet ordre ; on les déplace en les faisant glisser et on les supprime par double-clic.</span></li>
           <li><span class="di" data-ic="empty"></span><span>En boucle, indiquez la distance souhaitée : elle est approximative, et la boucle cherche à éviter les retours sur le même chemin.</span></li>
           <li><span class="di" data-ic="bar"></span><span><b>Barre de progression</b> pendant le calcul (une boucle teste plusieurs variantes).</span></li>
@@ -991,7 +998,7 @@
     </div>
     <div id="routeViaRow" style="margin-bottom:6px;padding:6px 7px;border:1px solid var(--border);border-radius:7px;background:var(--panel-2);">
       <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:12px;color:var(--text-muted);flex:1;">📍 Passages obligés</span>
+        <span style="font-size:12px;color:var(--text-muted);flex:1;display:flex;align-items:center;gap:6px;"><span class="via-pill">P</span>Passages obligés</span>
         <button class="btn" id="btnRouteAddVia" style="font-size:11px;padding:4px 8px;" title="Cliquer ensuite sur la carte">+ Ajouter</button>
         <button class="btn" id="btnRouteClearVia" style="font-size:11px;padding:4px 8px;" title="Supprimer tous les passages obligés">✕</button>
       </div>
@@ -1163,6 +1170,7 @@
 
   <footer>© A. Legat · v6.19 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
+  <div id="cursorLabel" aria-hidden="true"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl.js"></script>
@@ -1481,6 +1489,7 @@
   // Curseur : flèche au repos ; cible pendant la création d'un tracé ; croix pendant un choix sur la carte
   var manualDrawing = false;
   function updateIdleCursor(){
+    updateCursorLabel();
     if(cursorBeforePan !== null && cursorBeforePan !== undefined) return;   // pendant un déplacement : la main reste
     var c = map.getCanvas();
     if(routePickMode || (typeof svPickMode !== 'undefined' && svPickMode)){ c.style.cursor = 'crosshair'; return; }
@@ -1504,6 +1513,7 @@
     var c = map.getCanvas();
     if(cursorBeforePan === null) cursorBeforePan = c.style.cursor;
     c.style.cursor = CURSOR_GRABBING;
+    updateCursorLabel();
   }
   function panCursorOff(){
     if(cursorBeforePan === null) return;
@@ -1514,6 +1524,31 @@
   window.addEventListener('mouseup', panCursorOff);
   map.on('dragstart', panCursorOn);
   map.on('dragend', panCursorOff);
+
+  // ---------- Étiquette accrochée au curseur : Départ / Arrivée / Point de passage ----------
+  var cursorLabelPos = null;   // dernière position de la souris sur la carte (coordonnées écran)
+  function cursorLabelState(){
+    if(cursorBeforePan !== null && cursorBeforePan !== undefined) return null;   // pendant un déplacement de la carte
+    if(routePickMode === 'start') return document.getElementById('routeMode').value === 'loop' ? ['Départ / arrivée', 'start'] : ['Départ', 'start'];
+    if(routePickMode === 'end') return ['Arrivée', 'end'];
+    if(routePickMode === 'via') return ['Point de passage', 'via'];
+    if(svPickMode) return null;
+    if(isDrawingActive() && !points.length) return ['Départ', 'start'];   // premier point d'un tracé à la main
+    return null;
+  }
+  function updateCursorLabel(){
+    var el = document.getElementById('cursorLabel');
+    if(!el) return;
+    var st = cursorLabelPos ? cursorLabelState() : null;
+    if(!st){ el.style.display = 'none'; return; }
+    el.textContent = st[0];
+    el.className = 'cl-' + st[1];
+    el.style.left = (cursorLabelPos.x + 14) + 'px';
+    el.style.top = (cursorLabelPos.y + 16) + 'px';
+    el.style.display = 'block';
+  }
+  map.getCanvas().addEventListener('mousemove', function(ev){ cursorLabelPos = { x: ev.clientX, y: ev.clientY }; updateCursorLabel(); });
+  map.getCanvas().addEventListener('mouseleave', function(){ cursorLabelPos = null; updateCursorLabel(); });
 
   // ---------- Fenêtre géo : coordonnées du curseur (WGS84 / Lambert 72 / Lambert 2008) ----------
   if(window.proj4){
@@ -1939,7 +1974,7 @@
     if(list){
       list.innerHTML = routeViaPts.length
         ? routeViaPts.map(function(p, i){
-            return 'P' + (i+1) + ' : ' + p.lat.toFixed(4) + ', ' + p.lng.toFixed(4) +
+            return '<span class="via-pill">P' + (i+1) + '</span> ' + p.lat.toFixed(4) + ', ' + p.lng.toFixed(4) +
               ' <a href="#" data-via="' + i + '" style="color:var(--accent);text-decoration:none;">✕</a>';
           }).join('<br>')
         : 'Aucun (facultatif). Les marqueurs sont déplaçables.';
@@ -2009,6 +2044,7 @@
                         : 'Sélectionnez le point d\'arrivée');
     document.getElementById('routeStatus').textContent = msg + ' sur la carte…';
     showRouteBanner(msg);
+    updateCursorLabel();
   }
 
   // ---------- Google Street View : clic sur la carte -> ouverture dans un nouvel onglet ----------
@@ -3032,6 +3068,15 @@
         } else {
           statusEl.textContent = 'Itinéraire créé (' + coords.length + ' points).';
         }
+        // Allers-retours restants (ex. pour atteindre un passage obligé) : on le dit clairement
+        var bts = detectBacktracks(points);
+        if(bts.length){
+          keepOpen = true;
+          var btLen = bts.reduce(function(a, r){ return a + r.len; }, 0);
+          statusEl.insertAdjacentHTML('beforeend', '<br><span style="color:#f2c94c;font-weight:600;">⚠ ' + bts.length + ' aller-retour' + (bts.length > 1 ? 's' : '') +
+            ' sur le même chemin (~' + fmtBacktrackLen(btLen) + ')' + (routeViaPts.length ? ', sans doute pour atteindre un passage obligé' : '') +
+            ' : souligné en jaune sur la carte.</span>');
+        }
         // Le panneau reste ouvert quand il y a une information à lire
         if(!keepOpen) document.getElementById('routePanel').style.display = 'none';
       } else {
@@ -3327,7 +3372,7 @@
   // Le tracé est rééchantillonné tous les ~8 m. Un échantillon est « en retour » s'il passe
   // à moins de BT_TOL m d'une portion antérieure du tracé, parcourue dans le sens opposé.
   // Les tronçons contigus de plus de BT_MIN m sont signalés.
-  var BT_STEP = 8, BT_TOL = 14, BT_MIN = 60, BT_GAP = 30;
+  var BT_STEP = 8, BT_TOL = 14, BT_MIN = 60, BT_GAP = 30, BT_TIP = 16, BT_SPIKE_MIN = 25;
   var backtrackTimer = null, backtrackRuns = [], backtrackMarkers = [];
 
   function fmtBacktrackLen(m){ return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1).replace('.', ',') + ' km'; }
@@ -3383,11 +3428,56 @@
       }
     }
     if(cur) runs.push(cur);
-    return runs.map(function(r){
-      var seg = S.slice(r.start, r.end+1);
-      return { len: S[r.end].d - S[r.start].d, coords: seg.map(function(p){ return [p.lng, p.lat]; }),
-               mid: seg[Math.floor(seg.length/2)] };
+    runs = runs.map(function(r){
+      return { start:r.start, end:r.end, len: S[r.end].d - S[r.start].d, mid: Math.floor((r.start + r.end) / 2) };
     }).filter(function(r){ return r.len >= BT_MIN; });
+
+    // Demi-tours nets (pointe aller-retour, ex. pour atteindre un passage obligé) : la méthode
+    // ci-dessus ignore le voisinage de la pointe et rate les allers-retours courts. On repère ici un
+    // retournement de direction sur ≤ BT_TIP m, puis on mesure jusqu'où le retour longe l'aller.
+    for(var t=0; t<S.length-1; t++){
+      var tipEnd = -1;
+      for(var u=t+1; u<S.length && S[u].d - S[t].d <= BT_TIP; u++){
+        if(S[t].ux*S[u].ux + S[t].uy*S[u].uy < -0.94){ tipEnd = u; break; }   // demi-tour (> ~160°)
+      }
+      if(tipEnd < 0) continue;
+      var dTip = (S[t].d + S[tipEnd].d) / 2, lastF = -1, firstB = t, bp = t, sepSum = 0, sepN = 0;
+      for(var fw=tipEnd; fw<S.length; fw++){
+        var target = 2*dTip - S[fw].d;
+        if(target < -BT_STEP) break;                         // l'aller est épuisé
+        while(bp > 0 && S[bp].d > target + 25) bp--;
+        var best = Infinity, bestIdx = -1;
+        for(var q2=bp; q2>=0 && S[q2].d >= target - 25; q2--){   // aller : échantillons autour de la même distance
+          if(S[q2].ux*S[fw].ux + S[q2].uy*S[fw].uy > -0.6) continue;   // le retour doit aller en sens inverse
+          var dd = Math.hypot(S[q2].x-S[fw].x, S[q2].y-S[fw].y);
+          if(dd < best){ best = dd; bestIdx = q2; }
+        }
+        if(best > BT_TOL) break;
+        lastF = fw; firstB = Math.min(firstB, bestIdx); sepSum += best; sepN++;
+      }
+      var spurLen = lastF >= 0 ? S[lastF].d - dTip : 0;
+      // retour superposé à l'aller (écart moyen faible) : exclut les lacets et les virages en épingle
+      if(spurLen >= BT_SPIKE_MIN && sepSum / sepN <= 8){
+        var midD = dTip + spurLen/2, mi = tipEnd;
+        while(mi < lastF && S[mi].d < midD) mi++;
+        runs.push({ start:firstB, end:lastF, len:spurLen, mid:mi });
+        t = lastF;
+      }
+    }
+
+    // Fusion des tronçons qui se recouvrent (une même pointe peut être vue par les deux méthodes)
+    runs.sort(function(a, b){ return a.start - b.start; });
+    var merged = [];
+    runs.forEach(function(r){
+      var m = merged[merged.length-1];
+      if(m && S[r.start].d - S[m.end].d <= BT_GAP){
+        if(r.len > m.len){ m.len = r.len; m.mid = r.mid; }
+        m.end = Math.max(m.end, r.end);
+      } else merged.push({ start:r.start, end:r.end, len:r.len, mid:r.mid });
+    });
+    return merged.map(function(r){
+      return { len: r.len, coords: S.slice(r.start, r.end+1).map(function(p){ return [p.lng, p.lat]; }), mid: S[r.mid] };
+    });
   }
 
   function updateBacktracks(){
