@@ -581,6 +581,12 @@
     z-index:1000;
   }
 
+  /* Infobulles des boutons et éléments : translucides (remplacent les infobulles natives, opaques) */
+  #uiTip{position:fixed;z-index:6000;display:none;pointer-events:none;max-width:280px;padding:5px 9px;border-radius:6px;
+    background:var(--tip-bg);-webkit-backdrop-filter:var(--tip-blur);backdrop-filter:var(--tip-blur);
+    border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.35);
+    color:var(--text);font:500 12px/1.4 'Inter',sans-serif;}
+
   #vertexTooltip{
     position:fixed;
     pointer-events:none;
@@ -4948,6 +4954,60 @@
     document.addEventListener('keyup', function(){ setTimeout(sync, 0); });
     setInterval(sync, 500);
     sync();
+  })();
+
+  // ---------- Infobulles translucides pour les boutons (au lieu des infobulles natives, opaques) ----------
+  // Chaque attribut title est déplacé vers data-tip (y compris ceux ajoutés ou modifiés plus tard),
+  // ce qui supprime l'infobulle du navigateur ; une infobulle translucide s'affiche à la place.
+  (function translucentTitles(){
+    var tip = document.createElement('div');
+    tip.id = 'uiTip'; tip.setAttribute('role', 'tooltip');
+    document.documentElement.appendChild(tip);   // hors de <body> : non observé (pas de boucle avec l'observateur)
+    var cur = null, timer = null;
+    function adopt(el){
+      if(el.nodeType !== 1 || !el.hasAttribute('title') || el.closest('svg')) return;
+      var t = el.getAttribute('title');
+      el.removeAttribute('title');
+      if(t) el.setAttribute('data-tip', t); else el.removeAttribute('data-tip');
+      if(t && !el.hasAttribute('aria-label') && !el.textContent.trim()) el.setAttribute('aria-label', t);
+    }
+    function adoptAll(root){
+      if(root.nodeType !== 1) return;
+      adopt(root);
+      if(root.querySelectorAll) root.querySelectorAll('[title]').forEach(adopt);
+    }
+    function place(el){
+      var t = el.getAttribute('data-tip');
+      if(!t || !el.isConnected){ hide(); return; }
+      if(tip.textContent !== t) tip.textContent = t;
+      tip.style.display = 'block';
+      var r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+      var x = Math.max(6, Math.min(window.innerWidth - w - 6, r.left + r.width/2 - w/2));
+      var y = r.bottom + 8;
+      if(y + h > window.innerHeight - 6) y = Math.max(6, r.top - h - 8);
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    }
+    function hide(){ clearTimeout(timer); tip.style.display = 'none'; }
+    adoptAll(document.body);
+    new MutationObserver(function(muts){
+      var changed = false;
+      muts.forEach(function(m){
+        if(m.type === 'attributes'){ if(m.target.hasAttribute('title')){ adopt(m.target); changed = true; } }
+        else m.addedNodes.forEach(adoptAll);
+      });
+      if(changed && cur && tip.style.display === 'block') place(cur);   // texte mis à jour pendant le survol
+    }).observe(document.body, { subtree:true, childList:true, attributes:true, attributeFilter:['title'] });
+    document.addEventListener('mouseover', function(ev){
+      var el = ev.target && ev.target.closest ? ev.target.closest('[data-tip]') : null;
+      if(el === cur) return;
+      cur = el; hide();
+      if(el) timer = setTimeout(function(){ if(cur === el) place(el); }, 450);
+    }, true);
+    document.addEventListener('mouseout', function(ev){
+      if(cur && (!ev.relatedTarget || !cur.contains(ev.relatedTarget))){ cur = null; hide(); }
+    }, true);
+    ['mousedown', 'wheel', 'keydown'].forEach(function(t){ document.addEventListener(t, hide, true); });
+    window.addEventListener('blur', hide);
   })();
 
   // ---------- Hauteur visible réelle (Safari iPad/iPhone) ----------
