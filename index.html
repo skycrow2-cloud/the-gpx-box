@@ -578,7 +578,8 @@
     background:var(--tip-bg);
     -webkit-backdrop-filter:var(--tip-blur);
     backdrop-filter:var(--tip-blur);
-    color:var(--text);
+    color:var(--accent);
+    text-align:center;
     border:1px solid var(--border);
     font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;
     font-size:12px;
@@ -593,7 +594,7 @@
   #uiTip{position:fixed;z-index:6000;display:none;pointer-events:none;max-width:280px;padding:5px 9px;border-radius:var(--tip-radius);
     background:var(--tip-bg);-webkit-backdrop-filter:var(--tip-blur);backdrop-filter:var(--tip-blur);
     border:1px solid rgba(232,163,61,.35);box-shadow:0 4px 14px rgba(0,0,0,.35);
-    color:var(--text);font:500 12px/1.4 'Inter',sans-serif;}
+    color:var(--accent);font:500 12px/1.4 'Inter',sans-serif;text-align:center;}
 
   #vertexTooltip{
     position:fixed;
@@ -601,7 +602,8 @@
     background:var(--tip-bg);
     -webkit-backdrop-filter:var(--tip-blur);
     backdrop-filter:var(--tip-blur);
-    color:var(--text);
+    color:var(--accent);
+    text-align:center;
     border:1px solid var(--border);
     font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;
     font-size:12px;
@@ -1263,7 +1265,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.22 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.23 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -4444,9 +4446,13 @@
       var t = el.getAttribute('data-tip');
       if(!t || !el.isConnected){ hide(); return; }
       if(tip.textContent !== t) tip.textContent = t;
+      var r = el.getBoundingClientRect(), cx = r.left + r.width/2;
+      // largeur limitée pour rester centrée sur l'élément, même près des bords de la fenêtre
+      tip.style.maxWidth = Math.max(150, Math.min(280, 2*Math.min(cx - 6, window.innerWidth - cx - 6))) + 'px';
+      tip.style.left = '0px'; tip.style.top = '0px';   // mesure de la largeur sans être gênée par la position précédente
       tip.style.display = 'block';
-      var r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
-      var x = Math.max(6, Math.min(window.innerWidth - w - 6, r.left + r.width/2 - w/2));
+      var w = tip.offsetWidth, h = tip.offsetHeight;
+      var x = Math.max(6, Math.min(window.innerWidth - w - 6, cx - w/2));
       var y = r.bottom + 8;
       if(y + h > window.innerHeight - 6) y = Math.max(6, r.top - h - 8);
       tip.style.left = x + 'px'; tip.style.top = y + 'px';
