@@ -644,6 +644,9 @@
   }
   .doc-close:hover{background:var(--border);}
   .doc-body{padding:6px 20px 18px;overflow-y:auto;font-size:13.5px;line-height:1.55;color:var(--text);}
+  .doc-full-link{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px;padding:10px 14px;border-radius:8px;
+    background:var(--accent-soft);border:1px solid rgba(232,163,61,.45);color:var(--accent);font-weight:600;text-decoration:none;}
+  .doc-full-link:hover{background:rgba(232,163,61,.26);}
   .doc-body h3{margin:18px 0 6px;font-family:'Space Grotesk',sans-serif;font-size:14.5px;color:var(--accent);}
   .doc-body p{margin:0 0 8px;}
   .doc-body ul{margin:0 0 8px;padding-left:20px;}
@@ -794,6 +797,7 @@
         <button class="doc-close" id="btnDocClose" title="Fermer (Échap)" aria-label="Fermer">×</button>
       </div>
       <div class="doc-body">
+        <a href="documentation.html" target="_blank" rel="noopener" class="doc-full-link">📖 Documentation complète illustrée, avec captures et vidéos <span aria-hidden="true">→</span></a>
         <h3>Aide rapide : souris et clavier</h3>
         <div class="doc-quick">
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Sur un point (points visibles)</div>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation · The-GPX-Box</title>
+<meta name="description" content="Documentation complète de The-GPX-Box : tracer, modifier, calculer, importer et exporter une trace GPS, avec profil altimétrique, vidéos et captures.">
+<meta name="author" content="A. Legat">
+<link rel="icon" type="image/png" href="doc/img/ic/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Mêmes codes couleurs que l'application */
+  :root{
+    --bg:#0e1217;
+    --panel:#141922;
+    --panel-2:#1b222a;
+    --border:#2a323c;
+    --text:#eeeae1;
+    --text-muted:#8b93a1;
+    --accent:#e8a33d;
+    --accent-dark:#c9861f;
+    --accent-soft:rgba(232,163,61,.16);
+    --accent-2:#49b6c4;
+    --danger:#d9695f;
+    --start:#1c7a3f;
+    --finish:#d9342b;
+    --via:#2b6fd6;
+    --warn:#f2c94c;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:84px;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15.5px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  img,video{max-width:100%;display:block;}
+  kbd{font-family:'Inter',sans-serif;font-size:.82em;font-weight:600;background:var(--panel-2);border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--text);white-space:nowrap;}
+  code{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:.88em;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:0 5px;}
+  b,strong{font-weight:600;color:var(--text);}
+
+  /* ---------- En-tête ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;gap:12px;
+    padding:12px 22px;
+    background:linear-gradient(180deg, rgba(27,34,44,.97), rgba(20,25,34,.97));
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+    box-shadow:0 1px 0 rgba(232,163,61,.5), 0 4px 18px rgba(0,0,0,.35);
+  }
+  .topbar img{width:40px;height:40px;}
+  .topbar .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:var(--text);}
+  .topbar .brand span{color:var(--text-muted);font-weight:500;margin-left:6px;font-size:15px;}
+  .topbar .spacer{flex:1;}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:8px 15px;border-radius:8px;font-size:13.5px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;
+    transition:background .15s ease, box-shadow .15s ease, border-color .15s ease;}
+  .btn:hover{background:var(--border);text-decoration:none;}
+  .btn.accent{background:linear-gradient(135deg, var(--accent), var(--accent-dark));color:#1b1206;border-color:var(--accent);box-shadow:0 2px 10px rgba(232,163,61,.25);}
+  .btn.accent:hover{box-shadow:0 3px 14px rgba(232,163,61,.4);}
+  .menu-btn{display:none;}
+
+  /* ---------- Mise en page ---------- */
+  .layout{display:grid;grid-template-columns:260px minmax(0,1fr);max-width:1240px;margin:0 auto;}
+  nav.toc{position:sticky;top:65px;align-self:start;height:calc(100vh - 65px);overflow-y:auto;padding:26px 14px 30px 22px;border-right:1px solid var(--border);}
+  nav.toc .toc-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin:0 0 10px 10px;font-weight:600;}
+  nav.toc a{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:7px;color:var(--text-muted);font-size:13.5px;font-weight:500;line-height:1.35;}
+  nav.toc a .n{font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--accent);min-width:18px;}
+  nav.toc a:hover{background:var(--panel-2);color:var(--text);text-decoration:none;}
+  nav.toc a.active{background:var(--accent-soft);color:var(--text);}
+  main{padding:34px 48px 80px;max-width:940px;}
+
+  /* ---------- Titre principal ---------- */
+  .hero{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;padding:8px 0 30px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+  .hero img{width:96px;height:96px;filter:drop-shadow(0 6px 18px rgba(232,163,61,.25));}
+  .hero h1{font-family:'Space Grotesk',sans-serif;font-size:38px;line-height:1.1;margin:0 0 8px;letter-spacing:-.01em;}
+  .hero h1 em{font-style:normal;color:var(--accent);}
+  .hero p{margin:0 0 14px;color:var(--text-muted);font-size:16.5px;max-width:640px;}
+  .hero .actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+  section{padding-top:38px;}
+  h2{font-family:'Space Grotesk',sans-serif;font-size:26px;line-height:1.2;margin:0 0 6px;display:flex;align-items:center;gap:12px;}
+  h2 .num{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 8px;border-radius:9px;background:var(--accent-soft);color:var(--accent);font-size:16px;}
+  h3{font-family:'Space Grotesk',sans-serif;font-size:18px;margin:28px 0 8px;color:var(--accent);}
+  .lead{color:var(--text-muted);font-size:16px;margin:0 0 18px;}
+  p{margin:0 0 12px;}
+  ul,ol{margin:0 0 14px;padding-left:22px;}
+  li{margin-bottom:5px;}
+  li::marker{color:var(--accent);}
+
+  /* ---------- Cartes de fonctionnalités ---------- */
+  .cards{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:12px;margin:20px 0 6px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 15px;transition:border-color .15s ease, transform .15s ease;}
+  .card:hover{border-color:var(--accent);transform:translateY(-2px);text-decoration:none;}
+  .card .ic{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--panel-2);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+  .card .ic img{width:24px;height:24px;}
+  .card .ic svg{width:18px;height:18px;}
+  .card b{display:block;font-family:'Space Grotesk',sans-serif;font-size:15px;margin-bottom:3px;}
+  .card span{font-size:13px;color:var(--text-muted);line-height:1.45;display:block;}
+
+  /* ---------- Figures et vidéos ---------- */
+  figure{margin:18px 0 22px;}
+  .frame{position:relative;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--panel);box-shadow:0 10px 30px rgba(0,0,0,.35);}
+  .frame.inline{display:inline-block;max-width:100%;}
+  .frame video{width:100%;height:auto;background:#000;}
+  .frame .badge{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:rgba(14,18,23,.82);border:1px solid rgba(232,163,61,.45);color:var(--accent);font-size:11.5px;font-weight:600;pointer-events:none;}
+  figcaption{margin-top:9px;font-size:13px;color:var(--text-muted);}
+  figcaption b{color:var(--text);}
+  .duo{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:16px;align-items:start;}
+  .duo figure{margin:10px 0;}
+  .center{display:flex;justify-content:center;}
+  .narrow{max-width:420px;}
+
+  /* Capture annotée */
+  .annot{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:var(--accent);color:#1b1206;
+    font:700 13.5px/28px 'Space Grotesk',sans-serif;text-align:center;border:2px solid #1b1206;box-shadow:0 0 0 3px rgba(232,163,61,.35), 0 3px 10px rgba(0,0,0,.5);z-index:3;}
+  .legend{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px 22px;margin:14px 0 4px;padding:0;list-style:none;}
+  .legend li{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:0;}
+  .legend .k{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#1b1206;font:700 12px/24px 'Space Grotesk',sans-serif;text-align:center;margin-top:1px;}
+
+  /* Étapes numérotées */
+  .steps{counter-reset:s;list-style:none;padding:0;margin:14px 0 18px;}
+  .steps li{counter-increment:s;position:relative;padding:10px 14px 10px 54px;margin:0 0 8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;}
+  .steps li::before{content:counter(s);position:absolute;left:14px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font:700 13px/26px 'Space Grotesk',sans-serif;text-align:center;}
+
+  /* Tableaux */
+  .tbl{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0 18px;font-size:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .tbl th,.tbl td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border);}
+  .tbl tr:last-child td{border-bottom:none;}
+  .tbl th{background:var(--panel-2);font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:600;}
+  .tbl td{background:var(--panel);}
+  .tbl td:first-child{white-space:nowrap;}
+  .tbl .ic-cell{width:56px;text-align:center;}
+
+  /* Icônes de l'application */
+  .ib{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--panel-2);color:var(--accent);
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;vertical-align:middle;}
+  .ib img{width:24px;height:24px;}
+  .ib svg{width:18px;height:18px;}
+  .ib.sq{border-radius:6px;}
+  .ib.on{background:var(--accent);color:#1b1206;box-shadow:0 0 0 3px var(--accent-soft);}
+  .ib.sm{width:26px;height:26px;font-size:13px;}
+  .ib.sm img{width:18px;height:18px;}
+  .ib.sm svg{width:14px;height:14px;}
+  .flag{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.5);vertical-align:middle;}
+  .flag svg{width:13px;height:13px;}
+  .vnum{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#1b1206;font:700 11px 'Inter',sans-serif;border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.5);vertical-align:middle;}
+  .pill{display:inline-block;background:var(--via);color:#fff;font:700 10.5px/1.3 sans-serif;padding:1px 6px;border-radius:9px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);vertical-align:middle;}
+  .bang{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--finish);color:#fff;border:2px solid #fff;font:900 13px/1 'Inter',sans-serif;vertical-align:middle;box-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--accent-2);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6);vertical-align:middle;box-sizing:content-box;}
+  .lbl{display:inline-block;padding:0 6px 0 5px;border-radius:4px;background:rgba(20,25,34,.9);border:1px solid rgba(232,163,61,.55);border-left:3px solid #2fe07a;font:700 11px/1.5 'Space Grotesk',sans-serif;color:var(--text);vertical-align:middle;}
+  .lbl.end{border-left-color:var(--finish);} .lbl.via{border-left-color:var(--via);}
+
+  /* Encadrés */
+  .note{display:flex;gap:12px;padding:12px 15px;margin:14px 0 18px;border-radius:10px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent-2);font-size:14.5px;}
+  .note.tip{border-left-color:var(--accent);}
+  .note.warn{border-left-color:var(--danger);}
+  .note .t{flex:none;font-size:18px;line-height:1.4;}
+  .note p:last-child{margin-bottom:0;}
+
+  /* FAQ */
+  details{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:0 0 8px;}
+  details summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;align-items:center;gap:10px;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary::before{content:'+';display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-weight:700;flex:none;}
+  details[open] summary::before{content:'−';}
+  details > div{padding:0 16px 12px 48px;color:var(--text-muted);font-size:14.5px;}
+  details > div b{color:var(--text);}
+
+  footer{border-top:1px solid var(--border);padding:22px;color:var(--text-muted);font-size:12.5px;text-align:center;}
+
+  /* Retour en haut */
+  #toTop{position:fixed;right:18px;bottom:18px;z-index:40;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--panel-2);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;cursor:pointer;}
+  #toTop.show{opacity:1;pointer-events:auto;}
+
+  @media (max-width:1000px){
+    .layout{grid-template-columns:1fr;}
+    nav.toc{position:fixed;top:65px;left:0;bottom:0;height:auto;width:min(300px, 86vw);z-index:45;background:var(--panel);transform:translateX(-102%);transition:transform .2s ease;border-right:1px solid var(--border);}
+    nav.toc.open{transform:none;box-shadow:12px 0 30px rgba(0,0,0,.5);}
+    .menu-btn{display:inline-flex;}
+    main{padding:26px 16px 60px;}
+  }
+  @media (max-width:700px){
+    body{font-size:15px;}
+    .topbar{padding:10px 16px;}
+    .topbar .brand span,.topbar .open-app span{display:none;}
+    .hero{grid-template-columns:1fr;text-align:left;}
+    .hero img{width:72px;height:72px;}
+    .hero h1{font-size:30px;}
+    .cards,.duo,.legend{grid-template-columns:1fr;}
+    h2{font-size:22px;}
+    .tbl{font-size:13px;}
+    .tbl td:first-child{white-space:normal;}
+  }
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} .card{transition:none;} }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="btn menu-btn" id="menuBtn" aria-label="Sommaire" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <img src="doc/img/ic/logo.png" alt="">
+  <div class="brand">The-GPX-Box<span>Documentation</span></div>
+  <div class="spacer"></div>
+  <a class="btn accent open-app" href="index.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M10 14 20 4"/><path d="M20 14v6H4V4h6"/></svg><span>Ouvrir l'application</span></a>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc" aria-label="Sommaire">
+    <div class="toc-title">Sommaire</div>
+    <a href="#presentation"><span class="n">01</span>Présentation</a>
+    <a href="#interface"><span class="n">02</span>L'interface</a>
+    <a href="#outils"><span class="n">03</span>La barre d'outils</a>
+    <a href="#tracer"><span class="n">04</span>Tracer à la main</a>
+    <a href="#modifier"><span class="n">05</span>Modifier un tracé</a>
+    <a href="#itineraire"><span class="n">06</span>Suggérer un itinéraire</a>
+    <a href="#allers-retours"><span class="n">07</span>Allers-retours</a>
+    <a href="#importer"><span class="n">08</span>Importer un tracé</a>
+    <a href="#profil"><span class="n">09</span>Profil et statistiques</a>
+    <a href="#carte"><span class="n">10</span>La carte</a>
+    <a href="#reglages"><span class="n">11</span>Réglages d'affichage</a>
+    <a href="#exporter"><span class="n">12</span>Exporter en GPX</a>
+    <a href="#osm"><span class="n">13</span>Traces OpenStreetMap</a>
+    <a href="#raccourcis"><span class="n">14</span>Souris et clavier</a>
+    <a href="#faq"><span class="n">15</span>Questions fréquentes</a>
+    <a href="#sources"><span class="n">16</span>Sources et crédits</a>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <img src="doc/img/ic/logo.png" alt="Logo The-GPX-Box">
+      <div>
+        <h1>The-GPX-Box, <em>la documentation</em></h1>
+        <p>Dessinez une randonnée sur une carte libre d'accès, obtenez sa distance, son dénivelé et son profil altimétrique, puis exportez-la en fichier GPX. Ce guide explique chaque fonction, en images et en vidéos.</p>
+        <div class="actions">
+          <a class="btn accent" href="index.html">Ouvrir l'application</a>
+          <a class="btn" href="#tracer">Premier tracé en 1 minute</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 1. Présentation ================= -->
+    <section id="presentation">
+      <h2><span class="num">01</span>Présentation</h2>
+      <p class="lead">The-GPX-Box fonctionne entièrement dans le navigateur, sans compte ni installation. Vos tracés restent sur votre ordinateur tant que vous ne les exportez pas.</p>
+      <div class="cards">
+        <a class="card" href="#tracer"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg></div><b>Tracer à la main</b><span>Un clic par point, double-clic pour l'arrivée.</span></a>
+        <a class="card" href="#itineraire"><div class="ic"><img src="doc/img/ic/route.png" alt=""></div><b>Itinéraire suggéré</b><span>Rando, VTT ou moto, point à point ou en boucle.</span></a>
+        <a class="card" href="#importer"><div class="ic"><img src="doc/img/ic/import.png" alt=""></div><b>Importer</b><span>GPX, CSV, TXT ou liste de coordonnées.</span></a>
+        <a class="card" href="#profil"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="m3 16 5-7 4 4 4-6 5 8"/></svg></div><b>Profil altimétrique</b><span>Dénivelés, altitudes, pente au survol.</span></a>
+        <a class="card" href="#carte"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></div><b>Cartes et relief 3D</b><span>5 fonds, photo aérienne, sentiers balisés.</span></a>
+        <a class="card" href="#exporter"><div class="ic"><img src="doc/img/ic/export.png" alt="" style="transform:rotate(180deg)"></div><b>Exporter en GPX</b><span>Avec les altitudes, prêt pour votre GPS.</span></a>
+      </div>
+    </section>
+
+    <!-- ================= 2. Interface ================= -->
+    <section id="interface">
+      <h2><span class="num">02</span>L'interface en un coup d'œil</h2>
+      <p class="lead">L'écran se partage entre la carte, à gauche, et un panneau d'analyse, à droite. Les outils sont regroupés en haut à droite.</p>
+      <figure>
+        <div class="frame" id="annotFrame">
+          <img src="doc/img/interface.webp" alt="Vue d'ensemble de l'application avec un itinéraire calculé" loading="lazy" width="2560" height="1520">
+          <span class="annot" style="left:31%;top:3%">1</span>
+          <span class="annot" style="left:76%;top:5%">2</span>
+          <span class="annot" style="left:2.6%;top:13.5%">3</span>
+          <span class="annot" style="left:62%;top:20%">4</span>
+          <span class="annot" style="left:40%;top:50%">5</span>
+          <span class="annot" style="left:2.6%;top:93%">6</span>
+          <span class="annot" style="left:84%;top:18%">7</span>
+          <span class="annot" style="left:84%;top:43%">8</span>
+          <span class="annot" style="left:84%;top:76%">9</span>
+          <span class="annot" style="left:66%;top:58%">10</span>
+        </div>
+        <figcaption>Un itinéraire calculé, avec le survol du profil : le <b>point bleu</b> se place sur la carte à l'endroit correspondant.</figcaption>
+      </figure>
+      <ol class="legend">
+        <li><span class="k">1</span><span><b>Nombre de points</b> et alertes (allers-retours), puis <b>lieu et météo</b> du départ.</span></li>
+        <li><span class="k">2</span><span><b>Barre d'outils</b> : effacer, cadrer, importer, exporter, tracer, itinéraire, OSM, réglages, aide.</span></li>
+        <li><span class="k">3</span><span><b>Recherche</b> d'un lieu ou d'une adresse.</span></li>
+        <li><span class="k">4</span><span><b>Zoom, boussole, Street View</b> et menu <b>fond de carte</b>.</span></li>
+        <li><span class="k">5</span><span>Le <b>tracé</b>, avec drapeaux de départ et d'arrivée, et passages obligés.</span></li>
+        <li><span class="k">6</span><span><b>Échelle</b> et <b>coordonnées</b> du curseur (bouton en bas à gauche).</span></li>
+        <li><span class="k">7</span><span><b>Statistiques</b> : distance, points, dénivelés, altitudes.</span></li>
+        <li><span class="k">8</span><span><b>Profil altimétrique</b> interactif.</span></li>
+        <li><span class="k">9</span><span><b>Mini-carte</b> : vue d'ensemble et cadre de la vue actuelle.</span></li>
+        <li><span class="k">10</span><span><b>Glissière d'inclinaison</b> 3D et poignée pour masquer le panneau.</span></li>
+      </ol>
+      <div class="note tip"><span class="t">💡</span><p>La barre verticale entre la carte et le panneau se fait glisser pour agrandir l'un ou l'autre. La petite poignée <b>›</b> au bord de la carte masque complètement le panneau.</p></div>
+      <p>À l'ouverture, une petite fenêtre vous demande <b>par où commence votre parcours</b>. Elle se déplace à la souris et se ferme avec la croix.</p>
+      <div class="center"><figure class="narrow"><div class="frame"><img src="doc/img/invite.webp" alt="Fenêtre « Par où commence votre parcours ? »" loading="lazy"></div><figcaption>Deux façons de commencer : tracer vous-même, ou laisser l'application proposer un itinéraire.</figcaption></figure></div>
+    </section>
+
+    <!-- ================= 3. Outils ================= -->
+    <section id="outils">
+      <h2><span class="num">03</span>La barre d'outils</h2>
+      <p class="lead">Tous les boutons affichent une infobulle au survol. Une petite <b>pastille orange</b> signale l'outil actuellement utilisé.</p>
+      <figure><div class="frame"><img src="doc/img/toolbar.webp" alt="Barre d'outils de l'application" loading="lazy"></div></figure>
+      <table class="tbl">
+        <thead><tr><th class="ic-cell">Icône</th><th>Outil</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td class="ic-cell"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></span></td><td><b>Tout effacer</b></td><td>Remet le tracé à zéro, après confirmation.</td></tr>
+          <tr><td class="ic-cell"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M15 4h4a1 1 0 0 1 1 1v4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><path d="M9 20H5a1 1 0 0 1-1-1v-4"/><circle cx="12" cy="12" r="3"/></svg></span></td><td><b>Vue générale</b></td><td>Recadre la carte sur tout le tracé (dès qu'un point existe).</td></tr>
+          <tr><td class="ic-cell"><span class="ib"><img src="doc/img/ic/import.png" alt=""></span></td><td><b>Importer</b></td><td>Fichier GPX, CSV, TXT ou liste de coordonnées. <a href="#importer">Détails</a></td></tr>
+          <tr><td class="ic-cell"><span class="ib"><img src="doc/img/ic/export.png" alt="" style="transform:rotate(180deg)"></span></td><td><b>Exporter</b></td><td>Télécharge la trace en .GPX (à partir de deux points). <a href="#exporter">Détails</a></td></tr>
+          <tr><td class="ic-cell"><span class="ib on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg></span></td><td><b>Tracer</b></td><td>Active le dessin à la main (le bouton se remplit d'orange). Re-cliquer termine ou reprend le tracé. <a href="#tracer">Détails</a></td></tr>
+          <tr><td class="ic-cell"><span class="ib"><img src="doc/img/ic/route.png" alt=""></span></td><td><b>Suggérer un itinéraire</b></td><td>Calcul automatique, point à point ou en boucle. <a href="#itineraire">Détails</a></td></tr>
+          <tr><td class="ic-cell"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5H6a4 4 0 0 1-.6-7.95A6 6 0 0 1 17 9.2a4.6 4.6 0 0 1 1 9.1"/><path d="M10 21v-6.5M7.8 16.6 10 14.4l2.2 2.2"/><path d="M14.5 13v6.6M12.3 17.4l2.2 2.2 2.2-2.2"/></svg></span></td><td><b>Traces OpenStreetMap</b></td><td>Importer vos traces GPS OSM ou y envoyer la trace actuelle. <a href="#osm">Détails</a></td></tr>
+          <tr><td class="ic-cell"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span></td><td><b>Réglages</b></td><td>Couleur et épaisseur de la trace, infobulles, points cachés. <a href="#reglages">Détails</a></td></tr>
+          <tr><td class="ic-cell"><span class="ib">i</span></td><td><b>Aide</b></td><td>Aide rapide intégrée (gestes souris et clavier). Se ferme avec <kbd>Échap</kbd>.</td></tr>
+        </tbody>
+      </table>
+      <p>Sur la carte, sous les boutons de zoom :</p>
+      <table class="tbl">
+        <tbody>
+          <tr><td class="ic-cell"><span class="ib sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.2" r="1.9" fill="currentColor" stroke="none"/><path d="M12 7.2v5.6M12 12.8l-2.2 3.6M12 12.8l2.2 3.6M9 9.6l3-1.6 3 1.6" stroke-width="1.9"/><path d="M17.6 13.9c2.1.6 3.4 1.5 3.4 2.5 0 1.9-4 3.4-9 3.4s-9-1.5-9-3.4c0-1 1.3-1.9 3.4-2.5" stroke-width="1.7"/><path d="M14.6 18.2l2.4 1.4-2.4 1.6" stroke-width="1.7"/></svg></span></td><td><b>Street View 360°</b></td><td>Activez-le, puis cliquez sur la carte : Google Street View s'ouvre dans un nouvel onglet, au plus près du clic. <kbd>Échap</kbd> annule.</td></tr>
+          <tr><td class="ic-cell"><span class="ib sq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></span></td><td><b>Fond de carte</b></td><td>Choix du fond et des superpositions (photo aérienne, sentiers balisés, relief 3D). <a href="#carte">Détails</a></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= 4. Tracer ================= -->
+    <section id="tracer">
+      <h2><span class="num">04</span>Tracer à la main</h2>
+      <p class="lead">Vous placez vous-même les points, dans l'ordre du parcours. L'application relie les points en ligne droite et calcule tout le reste.</p>
+      <figure>
+        <div class="frame"><span class="badge">▶ Vidéo · 20 s</span>
+          <video controls muted loop playsinline preload="metadata" poster="doc/vid/tracer-poster.webp"><source src="doc/vid/tracer.mp4" type="video/mp4"></video>
+        </div>
+        <figcaption><b>Tracer à la main</b> : l'étiquette <span class="lbl">Départ</span> suit le curseur, chaque clic ajoute un point, le double-clic place l'arrivée.</figcaption>
+      </figure>
+      <ol class="steps">
+        <li>Cliquez sur <b>Tracer à la main</b> dans la fenêtre de départ, ou sur le crayon <span class="ib sm on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg></span> de la barre d'outils. Le curseur devient une cible.</li>
+        <li>Cliquez sur la carte pour placer le <b>départ</b> : il porte un drapeau vert <span class="flag" style="background:var(--start)"><svg viewBox="0 0 24 24"><line x1="4" y1="2" x2="4" y2="22" stroke="#fff" stroke-width="2.5"/><path d="M4 3 L21 7.5 L4 12 Z" fill="#2fe07a"/></svg></span>.</li>
+        <li>Continuez à cliquer : chaque point est numéroté <span class="vnum">2</span> <span class="vnum">3</span>… dans l'ordre. Suivez les chemins en ajoutant un point à chaque virage.</li>
+        <li>Terminez par un <b>double-clic</b> (ou la touche <kbd>Entrée</kbd>) : le dernier point devient l'<b>arrivée</b>, avec un drapeau à damier rouge <span class="flag" style="background:var(--finish)"><svg viewBox="0 0 24 24"><defs><pattern id="chk" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#fff"/><rect width="2" height="2" fill="#d9342b"/><rect x="2" y="2" width="2" height="2" fill="#d9342b"/></pattern></defs><line x1="4" y1="2" x2="4" y2="22" stroke="#fff" stroke-width="2.5"/><path d="M4 3 L21 7.5 L4 12 Z" fill="url(#chk)"/></svg></span>.</li>
+      </ol>
+      <div class="note"><span class="t">🏁</span><p>Si l'arrivée revient sur le départ, la boucle est signalée par un drapeau à damier blanc. Pour <b>reprendre</b> un tracé terminé, cliquez à nouveau sur le crayon : de nouveaux points s'ajouteront à la fin.</p></div>
+      <div class="note tip"><span class="t">💡</span><p>Zoomez avec la molette pendant le tracé pour placer les points précisément. Glisser la carte la déplace sans ajouter de point, et la main devient orange pendant le déplacement.</p></div>
+    </section>
+
+    <!-- ================= 5. Modifier ================= -->
+    <section id="modifier">
+      <h2><span class="num">05</span>Modifier un tracé</h2>
+      <p class="lead">Tout tracé, qu'il soit dessiné, calculé ou importé, reste modifiable point par point.</p>
+      <figure>
+        <div class="frame"><span class="badge">▶ Vidéo · 15 s</span>
+          <video controls muted loop playsinline preload="metadata" poster="doc/vid/editer-poster.webp"><source src="doc/vid/editer.mp4" type="video/mp4"></video>
+        </div>
+        <figcaption><b>Déplacer</b> un point, en <b>insérer</b> un sur le tracé, en <b>supprimer</b> un au clic droit, puis afficher l'<b>infobulle</b> d'un point.</figcaption>
+      </figure>
+      <table class="tbl">
+        <thead><tr><th>Action</th><th>Geste</th></tr></thead>
+        <tbody>
+          <tr><td><b>Déplacer un point</b></td><td>Clic gauche maintenu sur le point, puis glisser. La mini-carte montre le point en cours de déplacement.</td></tr>
+          <tr><td><b>Insérer un point</b></td><td>Clic sur le tracé, entre deux points, à l'endroit voulu. Le nouveau point peut ensuite être déplacé.</td></tr>
+          <tr><td><b>Supprimer un point</b></td><td>Clic droit sur le point.</td></tr>
+          <tr><td><b>Annuler</b></td><td><kbd>Échap</kbd> annule la sélection en cours, sinon supprime le dernier point ajouté.</td></tr>
+          <tr><td><b>Infobulle</b></td><td>Survol prolongé d'un point : numéro, altitude, distance depuis le départ (et vitesse pour une trace importée).</td></tr>
+          <tr><td><b>Tout effacer</b></td><td>Bouton <span class="ib sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></span>, avec confirmation.</td></tr>
+        </tbody>
+      </table>
+      <h3>Verrouiller le tracé : « Cacher les points »</h3>
+      <p>Dans les <a href="#reglages">réglages</a>, la case <b>Cacher les points</b> masque les points numérotés. Le tracé et les drapeaux restent visibles, mais le tracé passe en <b>lecture seule</b> : plus d'ajout, d'insertion, de déplacement ni de suppression, et <kbd>Entrée</kbd>, <kbd>Échap</kbd> et le double-clic sont désactivés.</p>
+      <p>Restent disponibles : la navigation, le profil, le survol du tracé, l'export, l'import, l'itinéraire suggéré et « Tout effacer ». Décochez la case pour reprendre l'édition. Elle n'est proposée que lorsqu'un tracé existe, et se décoche d'elle-même après « Tout effacer ».</p>
+    </section>
+
+    <!-- ================= 6. Itinéraire ================= -->
+    <section id="itineraire">
+      <h2><span class="num">06</span>Suggérer un itinéraire</h2>
+      <p class="lead">Indiquez un départ, une arrivée et, si vous le souhaitez, des passages obligés : l'application calcule le chemin en suivant le réseau de routes et de sentiers.</p>
+      <figure>
+        <div class="frame"><span class="badge">▶ Vidéo · 25 s</span>
+          <video controls muted loop playsinline preload="metadata" poster="doc/vid/itineraire-poster.webp"><source src="doc/vid/itineraire.mp4" type="video/mp4"></video>
+        </div>
+        <figcaption><b>Itinéraire point à point</b> avec un passage obligé : départ, arrivée, ajout de P1, puis calcul.</figcaption>
+      </figure>
+      <div class="duo">
+        <div>
+          <ol class="steps">
+            <li>Ouvrez le panneau avec <span class="ib sm"><img src="doc/img/ic/route.png" alt=""></span> ou <b>Suggérer un itinéraire</b> dans la fenêtre de départ.</li>
+            <li>Choisissez <b>Point à point</b> ou <b>Boucle</b>, et l'activité : <b>🥾 Rando</b>, <b>🚵 VTT</b> ou <b>🏍️ Moto</b>.</li>
+            <li>Cliquez le <b>départ</b> sur la carte (étiquette <span class="lbl">Départ</span>), puis l'<b>arrivée</b> (<span class="lbl end">Arrivée</span>), proposée aussitôt.</li>
+            <li>Facultatif : <b>+ Ajouter</b> un passage obligé (<span class="lbl via">Point de passage</span>). Les marqueurs <span class="pill">P1</span> <span class="pill">P2</span>… sont parcourus dans l'ordre.</li>
+            <li>Cliquez sur <b>Calculer l'itinéraire</b>. Une barre de progression s'affiche pendant le calcul.</li>
+          </ol>
+        </div>
+        <figure><div class="frame"><img src="doc/img/route-panel.webp" alt="Panneau Suggérer un itinéraire après le calcul" loading="lazy"></div><figcaption>Après le calcul, le panneau indique la distance et l'allongement dû aux passages obligés.</figcaption></figure>
+      </div>
+      <h3>Les options</h3>
+      <ul>
+        <li><b>Départ et arrivée</b> restent visibles et se déplacent en les faisant glisser. Re-cliquer sur « Départ » ou « Arrivée » permet de les replacer.</li>
+        <li><b>Passages obligés</b> : glissez un marqueur pour le déplacer, double-cliquez dessus ou utilisez ✕ dans la liste pour le supprimer. Le bouton ✕ à côté de « + Ajouter » les supprime tous.</li>
+        <li><b>Boucle</b> : un seul point (départ et arrivée confondus) et une distance souhaitée, par exemple 10 km. Elle est approximative : plusieurs variantes sont testées pour viser une marge de ±12 % et éviter de repasser par le même chemin. Si la boucle obtenue sort de la plage, le panneau le signale.</li>
+        <li><b>Réinitialiser</b> <span class="ib sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg></span> efface départ, arrivée et passages obligés, sans toucher à la trace déjà créée.</li>
+      </ul>
+      <div class="note"><span class="t">🧭</span><div><p><b>Moteurs de calcul.</b> Rando et VTT utilisent BRouter avec un profil dédié : sentiers et chemins forestiers pour la marche, chemins et single-tracks pour le VTT, routes évitées. La moto utilise un routage routier (OSRM). Si BRouter ne répond pas, un routage de secours prend le relais.</p>
+      <p>Les allers-retours inutiles (culs-de-sac, pointes) sont supprimés, sauf s'ils sont nécessaires pour atteindre un passage obligé. Le résultat remplace la trace actuelle, après confirmation, et reste modifiable point par point.</p></div></div>
+    </section>
+
+    <!-- ================= 7. Allers-retours ================= -->
+    <section id="allers-retours">
+      <h2><span class="num">07</span>Les allers-retours</h2>
+      <p class="lead">Quand un tracé repasse en sens inverse sur la même route ou le même chemin, l'application le signale clairement.</p>
+      <div class="duo">
+        <figure><div class="frame"><img src="doc/img/aller-retour.webp" alt="Tronçon en aller-retour souligné en jaune avec un point d'exclamation rouge" loading="lazy"></div><figcaption>Le tronçon est <b>souligné en jaune pointillé</b> et marqué d'un <span class="bang">!</span> rouge. Survolez-le pour connaître sa longueur.</figcaption></figure>
+        <div>
+          <p>Le signalement apparaît à trois endroits :</p>
+          <ul>
+            <li>sur la <b>carte</b>, avec le <span class="bang">!</span> qui pulse ;</li>
+            <li>en haut de l'écran, à côté du nombre de points ;</li>
+            <li>dans le panneau d'<b>itinéraire</b> ou d'<b>import</b>, qui reste alors ouvert pour que vous lisiez le message.</li>
+          </ul>
+          <figure style="margin-top:6px"><div class="frame inline"><img src="doc/img/hint-aller-retour.webp" alt="Indication du nombre d'allers-retours en haut de l'écran" loading="lazy"></div></figure>
+        </div>
+      </div>
+      <figure class="center"><div class="frame inline narrow"><img src="doc/img/import-alerte.webp" alt="Message d'aller-retour dans le panneau d'import" loading="lazy"></div></figure>
+      <div class="note"><span class="t">ℹ️</span><p>Sur un tracé dessiné ou calculé, un aller-retour est signalé dès une vingtaine de mètres. Sur une trace GPS enregistrée, le bruit du GPS (pauses, petits zigzags) est d'abord lissé et seuls les allers-retours d'au moins 40 m sont signalés, pour éviter les fausses alertes. Un aller-retour n'est pas une erreur : c'est souvent le seul moyen d'atteindre un point de vue ou un passage obligé.</p></div>
+    </section>
+
+    <!-- ================= 8. Importer ================= -->
+    <section id="importer">
+      <h2><span class="num">08</span>Importer un tracé</h2>
+      <p class="lead">Reprenez une trace enregistrée par votre GPS ou votre montre, un fichier de coordonnées, ou une simple liste collée.</p>
+      <figure>
+        <div class="frame"><span class="badge">▶ Vidéo · 12 s</span>
+          <video controls muted loop playsinline preload="metadata" poster="doc/vid/importer-poster.webp"><source src="doc/vid/importer.mp4" type="video/mp4"></video>
+        </div>
+        <figcaption><b>Import d'un fichier GPX</b> de 1 423 points : lecture, simplification automatique, puis création de la trace.</figcaption>
+      </figure>
+      <div class="duo">
+        <div>
+          <ol class="steps">
+            <li>Cliquez sur <span class="ib sm"><img src="doc/img/ic/import.png" alt=""></span> <b>Importer</b>.</li>
+            <li><b>Choisissez</b> un fichier .gpx, .csv ou .txt, ou <b>déposez-le</b> dans la zone orange. Vous pouvez aussi <b>coller</b> une liste de coordonnées.</li>
+            <li>Vérifiez le <b>système de coordonnées</b> (WGS84, Lambert 72 ou Lambert 2008) et, si besoin, les <b>colonnes</b>.</li>
+            <li>Cliquez sur <b>Créer/importer la trace</b>.</li>
+          </ol>
+        </div>
+        <figure><div class="frame"><img src="doc/img/import-panel.webp" alt="Panneau d'import avec le choix des colonnes" loading="lazy"></div><figcaption>Un fichier à trois champs : on indique la latitude, la longitude et l'altitude.</figcaption></figure>
+      </div>
+      <h3>Ce qu'il faut savoir</h3>
+      <ul>
+        <li><b>GPX</b> : un fichier peut contenir une trace, un itinéraire et des points de passage. Seule la trace est lue, à défaut l'itinéraire, puis les points de passage.</li>
+        <li><b>CSV / TXT / liste</b> : une paire par ligne. Le séparateur (virgule, point-virgule, tabulation, espace) est détecté et une ligne d'en-tête est ignorée. Avec plus de deux champs, vous choisissez les colonnes : latitude et longitude (ou X et Y en Lambert), altitude et vitesse.</li>
+        <li><b>Simplification</b> : au-delà de 500 points, la trace est simplifiée automatiquement en conservant virages, sommets et cols. Le panneau indique l'écart maximal obtenu.</li>
+        <li><b>Altitudes</b> : celles du fichier sont conservées ; sinon elles sont calculées à partir du modèle de terrain.</li>
+        <li><b>Vitesse</b> : si le fichier en contient, la vitesse moyenne apparaît dans les statistiques et dans l'infobulle des points.</li>
+      </ul>
+      <p>Exemple de liste valide :</p>
+<pre style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 15px;overflow:auto;font-size:13px;line-height:1.5;margin:0 0 16px"><code style="border:none;background:none;padding:0">50.539348, 5.746917, 321.6
+50.539426, 5.747052, 305.1
+50.539433, 5.747065, 305.0</code></pre>
+    </section>
+
+    <!-- ================= 9. Profil ================= -->
+    <section id="profil">
+      <h2><span class="num">09</span>Profil altimétrique et statistiques</h2>
+      <p class="lead">Le panneau de droite se met à jour à chaque modification du tracé.</p>
+      <figure>
+        <div class="frame"><span class="badge">▶ Vidéo · 12 s</span>
+          <video controls muted loop playsinline preload="metadata" poster="doc/vid/profil-poster.webp"><source src="doc/vid/profil.mp4" type="video/mp4"></video>
+        </div>
+        <figcaption><b>Survol du profil</b> : le point bleu suit la trace sur la carte. En maintenant le clic, la carte se recentre sur lui.</figcaption>
+      </figure>
+      <div class="duo">
+        <figure><div class="frame"><img src="doc/img/stats.webp" alt="Statistiques du tracé" loading="lazy"></div><figcaption>Distance, nombre de points, dénivelés positif et négatif, altitudes minimale et maximale.</figcaption></figure>
+        <figure><div class="frame"><img src="doc/img/profil.webp" alt="Profil altimétrique avec l'infobulle de survol" loading="lazy"></div><figcaption>L'infobulle donne l'altitude, la pente et la distance au point survolé.</figcaption></figure>
+      </div>
+      <ul>
+        <li>Les <b>altitudes</b> sont lues dans un modèle numérique de terrain (MNT, tuiles Terrarium AWS), sans limite de requêtes. Un message sous le profil indique la progression, avec un bouton <b>Réessayer</b> en cas d'échec.</li>
+        <li>La couleur du profil passe du vert (bas) au rouge (haut) selon l'altitude.</li>
+        <li>Survoler le profil place un point bleu <span class="dot"></span> sur la carte ; survoler le tracé sur la carte montre l'endroit correspondant sur le profil.</li>
+        <li>La <b>mini-carte</b> reste centrée sur l'ensemble de la trace, avec un cadre en pointillé qui montre la zone affichée sur la grande carte.</li>
+        <li>Le profil et la mini-carte s'adaptent à la taille de la fenêtre.</li>
+      </ul>
+      <div class="note"><span class="t">ℹ️</span><p>Sur une trace très dense, les petites irrégularités du terrain peuvent gonfler légèrement le dénivelé cumulé.</p></div>
+    </section>
+
+    <!-- ================= 10. Carte ================= -->
+    <section id="carte">
+      <h2><span class="num">10</span>La carte</h2>
+      <p class="lead">Navigation, fonds de carte, relief, recherche et coordonnées.</p>
+      <h3>Se déplacer</h3>
+      <ul>
+        <li><b>Glisser</b> (clic gauche) : déplacer la vue. <b>Molette</b> : zoomer et dézoomer.</li>
+        <li><b>Clic droit + glisser</b> : pivoter et incliner la vue. La boussole remet le nord en haut.</li>
+        <li>Le bouton <span class="ib sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M15 4h4a1 1 0 0 1 1 1v4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><path d="M9 20H5a1 1 0 0 1-1-1v-4"/><circle cx="12" cy="12" r="3"/></svg></span> <b>Vue générale</b> recadre sur tout le tracé.</li>
+      </ul>
+      <h3>Fonds de carte et superpositions</h3>
+      <div class="duo">
+        <figure><div class="frame"><img src="doc/img/menu-carte.webp" alt="Menu Fond de carte et superpositions" loading="lazy"></div></figure>
+        <div>
+          <ul>
+            <li><b>OpenTopoMap</b> : carte topographique mondiale (par défaut).</li>
+            <li><b>CartoWeb.be</b> : carte officielle de l'IGN belge (Belgique).</li>
+            <li><b>Plan IGN</b> : carte officielle de l'IGN France (France).</li>
+            <li><b>Geoportail.lu</b> : carte topographique du Luxembourg.</li>
+            <li><b>CyclOSM</b> : OpenStreetMap orienté vélo et VTT (chemins, revêtements).</li>
+          </ul>
+          <ul>
+            <li><b>Photo aérienne</b> : un curseur translucide <b>OpenTopoMap</b> apparaît en bas de la carte. Il règle l'opacité de la carte topo posée sur la photo, de 0 % (photo seule) à 100 % (carte opaque). Il démarre à 30 %.</li>
+            <li><b>Sentiers balisés</b> : itinéraires de randonnée balisés (GR, sentiers locaux). Le choix est mémorisé.</li>
+            <li><b>Relief 3D</b> : voir ci-dessous.</li>
+          </ul>
+        </div>
+      </div>
+      <h3>Relief 3D</h3>
+      <figure>
+        <div class="frame"><span class="badge">▶ Vidéo · 12 s</span>
+          <video controls muted loop playsinline preload="metadata" poster="doc/vid/relief-poster.webp"><source src="doc/vid/relief.mp4" type="video/mp4"></video>
+        </div>
+        <figcaption><b>Relief 3D</b> : activation dans le menu, rotation au clic droit, inclinaison avec la glissière verticale.</figcaption>
+      </figure>
+      <p>Cochez <b>Relief 3D</b> dans le menu de fond de carte : la vue s'incline et le terrain prend du volume. La <b>glissière verticale</b>, à droite de la carte, règle l'inclinaison (de 0 à 85°). Le clic droit + glisser fait aussi pivoter et incliner la vue.</p>
+      <h3>Rechercher un lieu</h3>
+      <div class="duo">
+        <figure><div class="frame"><img src="doc/img/recherche.webp" alt="Recherche d'un lieu avec ses résultats" loading="lazy"></div></figure>
+        <div>
+          <p>Cliquez sur la loupe <span class="ib sm"><img src="doc/img/ic/search.png" alt=""></span>, en haut à gauche, puis tapez un lieu ou une adresse. Choisissez un résultat : la carte s'y rend et le marque d'un point bleu.</p>
+          <p><kbd>Entrée</kbd> sur un champ vide recentre la carte sur <b>votre position</b>. La dernière recherche est mémorisée : <kbd>Entrée</kbd> permet d'y revenir.</p>
+        </div>
+      </div>
+      <h3>Coordonnées du curseur</h3>
+      <div class="duo">
+        <figure><div class="frame inline"><img src="doc/img/coordonnees.webp" alt="Coordonnées du curseur en Lambert 72" loading="lazy"></div></figure>
+        <p>Le bouton en bas à gauche de la carte affiche les coordonnées sous le curseur, en <b>WGS84</b> (latitude, longitude), <b>Lambert 72</b> ou <b>Lambert 2008</b> (X, Y en mètres).</p>
+      </div>
+      <h3>Lieu et météo</h3>
+      <p>En haut de l'écran, le <b>nom de la commune</b> et la <b>météo actuelle</b> (température, ciel, vent) sont ceux du point de départ, ou de votre position tant qu'aucun point n'est placé. Survolez le nom pour voir l'adresse complète.</p>
+    </section>
+
+    <!-- ================= 11. Réglages ================= -->
+    <section id="reglages">
+      <h2><span class="num">11</span>Réglages d'affichage</h2>
+      <div class="duo">
+        <figure><div class="frame"><img src="doc/img/reglages.webp" alt="Menu Réglages d'affichage" loading="lazy"></div></figure>
+        <div>
+          <ul>
+            <li><b>Couleur</b> de la trace et des points, mémorisée d'une visite à l'autre.</li>
+            <li><b>Épaisseur</b> de la trace, de 2 à 10 pixels.</li>
+            <li><b>Infobulles sur les points</b> : altitude et distance au survol prolongé d'un point.</li>
+            <li><b>Cacher les points</b> : masque les points numérotés et verrouille l'édition (<a href="#modifier">voir plus haut</a>).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 12. Exporter ================= -->
+    <section id="exporter">
+      <h2><span class="num">12</span>Exporter en GPX</h2>
+      <p>Le bouton <span class="ib sm"><img src="doc/img/ic/export.png" alt="" style="transform:rotate(180deg)"></span> <b>Exporter</b> devient actif dès deux points. Il demande un nom de fichier puis télécharge la trace au format GPX, avec les altitudes connues. Le fichier s'ouvre dans la plupart des GPS, montres et applications de randonnée.</p>
+      <div class="note tip"><span class="t">💡</span><p>Avant d'exporter, attendez la fin du calcul des altitudes (message sous le profil) pour que le fichier les contienne toutes.</p></div>
+    </section>
+
+    <!-- ================= 13. OSM ================= -->
+    <section id="osm">
+      <h2><span class="num">13</span>Traces GPS OpenStreetMap</h2>
+      <div class="duo">
+        <div>
+          <p>Le bouton <span class="ib sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18.5H6a4 4 0 0 1-.6-7.95A6 6 0 0 1 17 9.2a4.6 4.6 0 0 1 1 9.1"/><path d="M10 21v-6.5M7.8 16.6 10 14.4l2.2 2.2"/><path d="M14.5 13v6.6M12.3 17.4l2.2 2.2 2.2-2.2"/></svg></span> relie l'application à votre compte OpenStreetMap.</p>
+          <ul>
+            <li><b>Mes traces</b> : liste vos traces GPS OSM. « Importer » charge la trace choisie dans le panneau d'import ; terminez par « Créer/importer la trace ».</li>
+            <li><b>Envoyer</b> la trace actuelle, avec un nom, une description (obligatoire), des étiquettes et la visibilité : <i>identifiable</i> (visible par tous, avec votre nom) ou <i>traçable</i> (points anonymes, trace non listée).</li>
+            <li>OSM exige un horodatage par point : des heures fictives, à 4 km/h, sont ajoutées.</li>
+          </ul>
+        </div>
+        <figure><div class="frame"><img src="doc/img/osm.webp" alt="Panneau Traces GPS OpenStreetMap, première utilisation" loading="lazy"></div><figcaption>Première utilisation : déclarer l'application sur OpenStreetMap.</figcaption></figure>
+      </div>
+      <h3>Première utilisation</h3>
+      <ol class="steps">
+        <li>Connecté à OpenStreetMap, ouvrez <b>Mes applications OAuth 2</b> (lien dans le panneau).</li>
+        <li>Nom : <code>The-GPX-Box</code>. URI de redirection : celle affichée dans le panneau.</li>
+        <li>Décochez « Application confidentielle », cochez « Lire les traces GPS privées » et « Téléverser des traces GPS ».</li>
+        <li>Collez l'<b>ID client</b> obtenu, enregistrez, puis <b>Se connecter à OpenStreetMap</b>.</li>
+      </ol>
+      <div class="note warn"><span class="t">⚠️</span><p>La connexion OSM ne fonctionne que si la page est ouverte en <code>https://</code> ou sur <code>http://localhost</code>, pas depuis un fichier ouvert directement sur l'ordinateur.</p></div>
+    </section>
+
+    <!-- ================= 14. Raccourcis ================= -->
+    <section id="raccourcis">
+      <h2><span class="num">14</span>Souris et clavier</h2>
+      <table class="tbl">
+        <thead><tr><th>Où</th><th>Geste</th><th>Effet</th></tr></thead>
+        <tbody>
+          <tr><td>Carte (crayon actif)</td><td>Clic gauche sur une zone vide</td><td>Ajoute un point</td></tr>
+          <tr><td>Carte</td><td>Clic gauche sur le tracé</td><td>Insère un point à cet endroit</td></tr>
+          <tr><td>Carte</td><td>Double-clic · <kbd>Entrée</kbd></td><td>Place l'arrivée</td></tr>
+          <tr><td>Carte</td><td>Glisser</td><td>Déplace la vue (main orange)</td></tr>
+          <tr><td>Carte</td><td>Clic droit + glisser</td><td>Pivote et incline la vue</td></tr>
+          <tr><td>Carte</td><td>Molette</td><td>Zoom</td></tr>
+          <tr><td>Point</td><td>Glisser</td><td>Déplace le point</td></tr>
+          <tr><td>Point</td><td>Clic droit</td><td>Supprime le point</td></tr>
+          <tr><td>Point</td><td>Survol prolongé</td><td>Infobulle (altitude, distance)</td></tr>
+          <tr><td>Profil</td><td>Survol · clic maintenu</td><td>Point bleu sur la carte · la carte le suit</td></tr>
+          <tr><td>Partout</td><td><kbd>Échap</kbd></td><td>Annule la sélection, le choix en cours ou le dernier point ; ferme l'aide</td></tr>
+          <tr><td>Recherche</td><td><kbd>Entrée</kbd> sur champ vide</td><td>Recentre sur votre position</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= 15. FAQ ================= -->
+    <section id="faq">
+      <h2><span class="num">15</span>Questions fréquentes</h2>
+      <details><summary>Mes tracés sont-ils enregistrés quelque part ?</summary><div>Non. Tout se passe dans votre navigateur. Seuls quelques réglages (couleur, épaisseur, sentiers balisés…) sont mémorisés localement. Pensez à <b>exporter</b> votre trace en GPX pour la garder.</div></details>
+      <details><summary>Pourquoi le dénivelé diffère-t-il de celui de ma montre ?</summary><div>Les altitudes viennent d'un modèle de terrain, alors qu'une montre mesure souvent la pression. Sur une trace très dense, les petites irrégularités du terrain s'additionnent : l'écart de quelques pour cent est normal.</div></details>
+      <details><summary>Le calcul d'itinéraire échoue ou propose un détour.</summary><div>Vérifiez que départ, arrivée et passages obligés sont posés près d'un chemin. Un passage obligé dans un cul-de-sac impose un <b>aller-retour</b>, que l'application signale. Si BRouter ne répond pas, un routage de secours est utilisé.</div></details>
+      <details><summary>Ma boucle ne fait pas la distance demandée.</summary><div>La distance est indicative : le réseau de chemins ne permet pas toujours de la respecter exactement. L'application vise ±12 % et indique quand la boucle sort de cette plage. Essayez une autre distance ou un autre départ.</div></details>
+      <details><summary>Mon fichier importé compte beaucoup moins de points.</summary><div>Au-delà de 500 points, la trace est <b>simplifiée</b> pour rester fluide. Les virages, sommets et cols sont conservés, et l'écart maximal est indiqué dans le panneau d'import.</div></details>
+      <details><summary>Un fond de carte reste vide.</summary><div>CartoWeb.be, Plan IGN et Geoportail.lu ne couvrent respectivement que la Belgique, la France et le Luxembourg. Ailleurs, choisissez OpenTopoMap ou CyclOSM.</div></details>
+      <details><summary>Je ne peux plus modifier mon tracé.</summary><div>La case <b>Cacher les points</b> est probablement cochée dans les réglages : elle verrouille l'édition. Décochez-la.</div></details>
+    </section>
+
+    <!-- ================= 16. Sources ================= -->
+    <section id="sources">
+      <h2><span class="num">16</span>Sources et crédits</h2>
+      <p>Fonds © OpenTopoMap (CC-BY-SA), IGN Belgique – CartoWeb.be, IGN France – Plan IGN, ACT – geoportail.lu, CyclOSM / OpenStreetMap · Sentiers balisés © Waymarked Trails · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS © OpenStreetMap.</p>
+      <div class="note"><span class="t">🎬</span><p>Les captures et vidéos de cette documentation ont été réalisées sur l'application elle-même, avec un fond de carte construit à partir des données OpenStreetMap (© contributeurs OpenStreetMap, ODbL) de Florence et un relief simulé. Les couleurs du fond peuvent donc différer légèrement de celles d'OpenTopoMap.</p></div>
+    </section>
+  </main>
+</div>
+
+<footer>© A. Legat · The-GPX-Box · <a href="index.html">Ouvrir l'application</a></footer>
+<button id="toTop" aria-label="Revenir en haut"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+
+<script>
+(function(){
+  // Sommaire : section active au défilement
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){ a.classList.remove('active'); });
+          var a = map[e.target.id]; if(a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    document.querySelectorAll('main section[id]').forEach(function(s){ io.observe(s); });
+  }
+  // Sommaire mobile
+  var toc = document.getElementById('toc'), btn = document.getElementById('menuBtn');
+  btn.addEventListener('click', function(){ var o = toc.classList.toggle('open'); btn.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ toc.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }); });
+  // Retour en haut
+  var top = document.getElementById('toTop');
+  window.addEventListener('scroll', function(){ top.classList.toggle('show', window.scrollY > 600); }, { passive: true });
+  top.addEventListener('click', function(){ window.scrollTo({ top: 0 }); });
+  // Une seule vidéo lue à la fois
+  var vids = Array.prototype.slice.call(document.querySelectorAll('video'));
+  vids.forEach(function(v){ v.addEventListener('play', function(){ vids.forEach(function(o){ if(o !== v) o.pause(); }); }); });
+})();
+</script>
+</body>
+</html>
