@@ -672,6 +672,7 @@
   #cursorLabel.cl-start{border-left-color:#2fe07a;}
   #cursorLabel.cl-end{border-left-color:#d9342b;}
   #cursorLabel.cl-via{border-left-color:#2b6fd6;}
+  #importMapRow label{color:#f5c542;font-weight:600;}   /* libellés Latitude / Longitude / Altitude / Vitesse en jaune */
   .via-pill{display:inline-block;background:#2b6fd6;color:#fff;font:700 10px/1.25 sans-serif;padding:1px 5px;border-radius:9px;border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);vertical-align:middle;margin:1px 0;}
   .di-pill{background:#2b6fd6;color:#fff;font:700 11px sans-serif;padding:3px 6px;border-radius:10px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);}
   .di-dot{width:14px;height:14px;border-radius:50%;background:#49b6c4;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6);box-sizing:content-box;}
@@ -3375,7 +3376,7 @@
   // Le tracé est rééchantillonné tous les ~8 m. Un échantillon est « en retour » s'il passe
   // à moins de BT_TOL m d'une portion antérieure du tracé, parcourue dans le sens opposé.
   // Les tronçons contigus de plus de BT_MIN m sont signalés.
-  var BT_STEP = 8, BT_TOL = 14, BT_MIN = 60, BT_GAP = 30, BT_TIP = 16, BT_SPIKE_MIN = 25;
+  var BT_STEP = 8, BT_TOL = 14, BT_MIN = 60, BT_GAP = 30, BT_TIP = 20, BT_SPIKE_MIN = 20, BT_SPIKE_MIN_GPS = 40, BT_DECIM = 10;
   var backtrackTimer = null, backtrackRuns = [], backtrackMarkers = [];
 
   function fmtBacktrackLen(m){ return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1).replace('.', ',') + ' km'; }
@@ -3383,6 +3384,30 @@
   function detectBacktracks(pts){
     if(pts.length < 3) return [];
     var lat0 = pts[0].lat * Math.PI / 180, kx = 111320 * Math.cos(lat0), ky = 110540;
+    // Trace GPS enregistrée (GPX importé, points serrés) : on écarte d'abord le bruit — piétinement
+    // à l'arrêt et zigzags de quelques mètres. 1) lissage local : chaque point est remplacé par la
+    // moyenne de ses voisins proches (≤ BT_DECIM m, ±6 points) ; 2) on ne garde que les points
+    // distants d'au moins BT_DECIM m. Une pointe doit alors faire au moins BT_SPIKE_MIN_GPS m.
+    var gaps = [];
+    for(var gi=1; gi<pts.length; gi++) gaps.push(Math.hypot((pts[gi].lng-pts[gi-1].lng)*kx, (pts[gi].lat-pts[gi-1].lat)*ky));
+    gaps.sort(function(a, b){ return a - b; });
+    var dense = gaps[Math.floor(gaps.length/2)] < BT_DECIM;
+    var spikeMin = dense ? BT_SPIKE_MIN_GPS : BT_SPIKE_MIN;
+    if(dense) pts = pts.map(function(p, i){
+      var sx = 0, sy = 0, n = 0;
+      for(var j=Math.max(0, i-6); j<=Math.min(pts.length-1, i+6); j++){
+        var dx = (pts[j].lng-p.lng)*kx, dy = (pts[j].lat-p.lat)*ky;
+        if(dx*dx + dy*dy <= BT_DECIM*BT_DECIM){ sx += pts[j].lng; sy += pts[j].lat; n++; }
+      }
+      return { lng: sx/n, lat: sy/n };
+    });
+    var kept = [pts[0]];
+    for(var di=1; di<pts.length; di++){
+      var lk = kept[kept.length-1];
+      if(Math.hypot((pts[di].lng-lk.lng)*kx, (pts[di].lat-lk.lat)*ky) >= BT_DECIM || di === pts.length-1) kept.push(pts[di]);
+    }
+    pts = kept;
+    if(pts.length < 3) return [];
     var S = [];
     var cum = 0;
     for(var i=0;i<pts.length-1;i++){
@@ -3437,14 +3462,23 @@
 
     // Demi-tours nets (pointe aller-retour, ex. pour atteindre un passage obligé) : la méthode
     // ci-dessus ignore le voisinage de la pointe et rate les allers-retours courts. On repère ici un
-    // retournement de direction sur ≤ BT_TIP m, puis on mesure jusqu'où le retour longe l'aller.
-    for(var t=0; t<S.length-1; t++){
-      var tipEnd = -1;
-      for(var u=t+1; u<S.length && S[u].d - S[t].d <= BT_TIP; u++){
-        if(S[t].ux*S[u].ux + S[t].uy*S[u].uy < -0.94){ tipEnd = u; break; }   // demi-tour (> ~160°)
-      }
-      if(tipEnd < 0) continue;
-      var dTip = (S[t].d + S[tipEnd].d) / 2, lastF = -1, firstB = t, bp = t, sepSum = 0, sepN = 0;
+    // sommet où la direction s'inverse — cordes de BT_TIP m avant / après, ce qui lisse le bruit GPS —
+    // puis on mesure jusqu'où le retour longe l'aller.
+    function chordDot(k){
+      var a2 = k, c2 = k;
+      while(a2 > 0 && S[k].d - S[a2].d < BT_TIP) a2--;
+      while(c2 < S.length-1 && S[c2].d - S[k].d < BT_TIP) c2++;
+      if(a2 === k || c2 === k) return 1;
+      var v1x = S[k].x-S[a2].x, v1y = S[k].y-S[a2].y, v2x = S[c2].x-S[k].x, v2y = S[c2].y-S[k].y;
+      var n1 = Math.hypot(v1x, v1y), n2 = Math.hypot(v2x, v2y);
+      return (n1 < 1 || n2 < 1) ? 1 : (v1x*v2x + v1y*v2y) / (n1*n2);
+    }
+    for(var t=1; t<S.length-1; t++){
+      var cd = chordDot(t);
+      if(cd > -0.9) continue;                                  // pas de demi-tour (< ~155°)
+      while(t+1 < S.length-1 && chordDot(t+1) < cd){ t++; cd = chordDot(t); }   // sommet le plus net
+      var tipEnd = t + 1;
+      var dTip = S[t].d, lastF = -1, firstB = t - 1, bp = t - 1, sepSum = 0, sepN = 0;
       for(var fw=tipEnd; fw<S.length; fw++){
         var target = 2*dTip - S[fw].d;
         if(target < -BT_STEP) break;                         // l'aller est épuisé
@@ -3460,7 +3494,7 @@
       }
       var spurLen = lastF >= 0 ? S[lastF].d - dTip : 0;
       // retour superposé à l'aller (écart moyen faible) : exclut les lacets et les virages en épingle
-      if(spurLen >= BT_SPIKE_MIN && sepSum / sepN <= 8){
+      if(spurLen >= spikeMin && sepSum / sepN <= 8){
         var midD = dTip + spurLen/2, mi = tipEnd;
         while(mi < lastF && S[mi].d < midD) mi++;
         runs.push({ start:firstB, end:lastF, len:spurLen, mid:mi });
@@ -4733,10 +4767,21 @@
           nameEl.textContent = finalPts.length < original
             ? '✔ ' + fmtInt(original) + ' points simplifiés à ' + fmtInt(finalPts.length) + ' (écart max. ≈ ' + (Math.round(tol*10)/10) + ' m)'
             : '✔ Trace créée — ' + fmtInt(finalPts.length) + ' points';
+          // Allers-retours dans le tracé importé : même signalement que pour un itinéraire calculé
+          var bts = detectBacktracks(points);
+          if(bts.length){
+            var btLen = bts.reduce(function(a, r){ return a + r.len; }, 0);
+            var warn = document.createElement('span');
+            warn.style.cssText = 'display:block;margin-top:4px;color:#f2c94c;font-weight:600;';
+            warn.innerHTML = '⚠ ' + bts.length + ' aller-retour' + (bts.length > 1 ? 's' : '') + ' sur le même chemin (~' + fmtBacktrackLen(btLen) +
+              ') : souligné' + (bts.length > 1 ? 's' : '') + ' en jaune et marqué' + (bts.length > 1 ? 's' : '') + ' d\'un <b>!</b> rouge sur la carte.';
+            nameEl.appendChild(warn);
+          }
           setTimeout(function(){
             importBusy = false;
             setImportProgress(false);
-            document.getElementById('importPanel').style.display = 'none';
+            // Le panneau reste ouvert quand il y a un aller-retour à signaler
+            if(!bts.length) document.getElementById('importPanel').style.display = 'none';
             document.getElementById('importText').value = '';
             analyzeImportText();
             updateImportApplyState();
