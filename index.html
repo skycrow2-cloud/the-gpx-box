@@ -958,7 +958,7 @@
 
         <h3>Aperçu de la trace</h3>
         <ul class="doc-icons">
-          <li><span class="di" data-ic="mini"></span><span>La mini-carte du panneau de droite reste centrée sur l'ensemble de la trace. Le cadre en pointillé montre la zone affichée sur la grande carte.</span></li>
+          <li><span class="di" data-ic="mini"></span><span>La mini-carte du panneau de droite reste centrée sur l'ensemble de la trace. Le cadre en pointillé montre la zone affichée sur la grande carte ; si l'on s'éloigne de la trace, la mini-carte s'élargit pour garder ce cadre visible, puis se recadre sur la trace au retour.</span></li>
           <li><span class="di" data-ic="dot"></span><span>Un point bleu suit le sommet en cours de déplacement, ou la position survolée sur le profil.</span></li>
         </ul>
 
@@ -1263,7 +1263,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.21 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.22 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -1527,12 +1527,8 @@
     var coords = points.map(function(p){ return [p.lng, p.lat]; });
     miniSetTrack(coords);
     if(!fit) return;
-    if(coords.length >= 2){
-      var b = new maplibregl.LngLatBounds(coords[0], coords[0]);
-      coords.forEach(function(c){ b.extend(c); });
-      miniMap.fitBounds(b, { padding:18, duration:400, maxZoom:16 });
-    } else if(coords.length === 1){
-      miniMap.easeTo({ center: coords[0], zoom: 13, duration:400 });
+    if(coords.length){
+      miniFitTrack();
     } else {
       var c = map.getCenter();
       miniMap.jumpTo({ center:[c.lng, c.lat], zoom: Math.max(1, map.getZoom()-3) });
@@ -1548,6 +1544,37 @@
     if(points.length === 0){
       var c = map.getCenter();
       miniMap.jumpTo({ center:[c.lng, c.lat], zoom: Math.max(1, map.getZoom()-3) });
+      return;
+    }
+    // La vue sort de la zone de la trace (ou y revient) : la mini-carte s'adapte
+    if(miniExpanded || miniViewOutsideTrack()) miniFitTrack();
+  }
+  // Mini-carte : cadrée sur la trace ; si la vue principale s'en éloigne (centre hors de l'emprise
+  // de la trace, élargie de 15 %), elle englobe aussi la vue, puis se recadre sur la trace au retour.
+  var miniExpanded = false;
+  function miniTrackBounds(){
+    var b = new maplibregl.LngLatBounds([points[0].lng, points[0].lat], [points[0].lng, points[0].lat]);
+    points.forEach(function(p){ b.extend([p.lng, p.lat]); });
+    return b;
+  }
+  function miniViewOutsideTrack(){
+    if(!points.length) return false;
+    var b = miniTrackBounds(), c = map.getCenter();
+    var mw = Math.max((b.getEast()-b.getWest())*0.15, 0.003), mh = Math.max((b.getNorth()-b.getSouth())*0.15, 0.002);
+    return c.lng < b.getWest()-mw || c.lng > b.getEast()+mw || c.lat < b.getSouth()-mh || c.lat > b.getNorth()+mh;
+  }
+  function miniFitTrack(){
+    if(!miniReady || !points.length) return;
+    var b = miniTrackBounds();
+    miniExpanded = miniViewOutsideTrack();
+    if(miniExpanded){
+      var v = map.getBounds();
+      b.extend(v.getSouthWest()); b.extend(v.getNorthEast());
+      miniMap.fitBounds(b, { padding:18, duration:400, maxZoom:16 });
+    } else if(points.length === 1){
+      miniMap.easeTo({ center: [points[0].lng, points[0].lat], zoom: 13, duration:400 });
+    } else {
+      miniMap.fitBounds(b, { padding:18, duration:400, maxZoom:16 });
     }
   }
   function miniShowDot(lng, lat, autoHideMs){
