@@ -885,6 +885,8 @@
   :root[data-theme="light"] .pitch-control, :root[data-theme="light"] #sideToggle, :root[data-theme="light"] .topo-opacity,
   :root[data-theme="light"] #mapCtxMenu{border-color:rgba(255,138,0,.5);box-shadow:0 4px 14px rgba(40,30,10,.16);}
   :root[data-theme="light"] .maplibregl-ctrl-attrib a{color:var(--text-muted);}
+  #lnkAideHtml{margin-right:0;text-decoration:none;}
+  #lnkAideHtml + .doc-link{margin-left:0;}
   .doc-link{margin-left:auto;margin-right:8px;background:transparent;border:1px solid var(--border);color:var(--accent);border-radius:6px;
     font-size:12px;padding:3px 9px;cursor:pointer;white-space:nowrap;}
   .doc-link:hover{border-color:var(--accent);}
@@ -947,6 +949,7 @@
     <div class="doc-modal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
       <div class="doc-head">
         <h2 id="docTitle">Aide et documentation · The-GPX-Box</h2>
+        <a class="doc-link" id="lnkAideHtml" href="aide/" target="_blank" rel="noopener" title="Ouvrir l'aide illustrée (captures et vidéos) dans un nouvel onglet">📖 Aide illustrée</a>
         <button class="doc-link" id="btnDocLink" type="button" title="Copier le lien direct vers l'aide" aria-label="Copier le lien direct vers l'aide">🔗 Lien</button>
         <button class="doc-close" id="btnDocClose" title="Fermer (Échap)" aria-label="Fermer">×</button>
       </div>
