@@ -1672,6 +1672,7 @@
   // Main (« grabbing ») dès l'appui pour déplacer la carte, curseur précédent restauré au relâchement
   var cursorBeforePan = null;
   function panCursorOn(){
+    if(typeof trackScrub !== 'undefined' && trackScrub) return;
     var c = map.getCanvas();
     if(cursorBeforePan === null) cursorBeforePan = c.style.cursor;
     c.style.cursor = CURSOR_GRABBING;
@@ -1830,9 +1831,48 @@
       showProfilePositionAtDistance(res.dist);
     });
     map.on('mouseleave', 'route-line', function(){
+      if(trackScrub) return;
       updateIdleCursor();
       hideProfilePosition();
     });
+
+    // ---------- Glisser le long de la trace (clic maintenu ou doigt) ----------
+    // Zone de saisie élargie et invisible au-dessus du tracé
+    map.addLayer({ id:'route-hit', type:'line', source:'route',
+      layout:{ 'line-cap':'round', 'line-join':'round' },
+      paint:{ 'line-color':'#000', 'line-width':22, 'line-opacity':0.001 } });
+    map.on('mouseenter', 'route-hit', function(){ if(cursorBeforePan === null && !routePickMode && !pointsHidden && points.length >= 2) map.getCanvas().style.cursor = 'ew-resize'; });
+    map.on('mouseleave', 'route-hit', function(){ if(!trackScrub) updateIdleCursor(); });
+    function scrubTo(lngLat){
+      if(points.length < 2) return;
+      showProfilePositionAtDistance(nearestDistanceOnTrack(lngLat).dist);
+    }
+    function scrubStart(e){
+      if(routePickMode || svPickMode || points.length < 2) return;
+      e.preventDefault();                      // pas de déplacement de la carte pendant le glissement
+      trackScrub = { moved:false };
+      cursorBeforePan = null;                  // pas de main « déplacement » : on glisse sur la trace
+      map.getCanvas().style.cursor = 'ew-resize';
+      scrubTo(e.lngLat);
+    }
+    function scrubMove(e){
+      if(!trackScrub) return;
+      trackScrub.moved = true;
+      scrubTo(e.lngLat);
+    }
+    function scrubEnd(){
+      if(!trackScrub) return;
+      if(trackScrub.moved) suppressMapClickUntil = Date.now() + 350;   // un glissement n'insère pas de point
+      trackScrub = null;
+      updateIdleCursor();
+    }
+    map.on('mousedown', 'route-hit', scrubStart);
+    map.on('touchstart', 'route-hit', function(e){ if(e.points && e.points.length === 1) scrubStart(e); });
+    map.on('mousemove', scrubMove);
+    map.on('touchmove', scrubMove);
+    window.addEventListener('mouseup', scrubEnd);
+    map.on('touchend', function(){ scrubEnd(); setTimeout(hideProfilePosition, 1500); });
+    map.on('touchcancel', scrubEnd);
 
     // le conteneur peut ne pas avoir sa taille finale au tout premier rendu (layout flex)
     setTimeout(function(){ map.resize(); }, 50);
@@ -2103,6 +2143,7 @@
 
   // ---------- Clic carte : ajoute ou insère un vertex (différé pour ne pas interférer avec le double-clic) ----------
   var pendingMapClickTimer = null, drawHintTimer = null;
+  var trackScrub = null, suppressMapClickUntil = 0;
   var routePickMode = null; // null | 'start' | 'end'
   var routeStartPt = null, routeEndPt = null;
   // Points de passage obligés (dans l'ordre de passage).
@@ -2257,6 +2298,7 @@
   }
 
   map.on('click', function(e){
+    if(Date.now() < suppressMapClickUntil) return;
     if(svPickMode){
       openStreetView(e.lngLat.lat, e.lngLat.lng);
       setStreetViewMode(false);
