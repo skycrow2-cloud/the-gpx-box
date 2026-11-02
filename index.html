@@ -440,7 +440,9 @@
   .search-box:not(.expanded) .search-row{border-radius:50%;}
   .search-box.expanded .search-row{border-radius:999px;padding-right:12px;}
   .coord-box{border-radius:999px !important;}
-  .coord-box:not(.expanded){border-radius:50% !important;}
+  .coord-box:not(.expanded){border-radius:50% !important;width:30px;height:30px;padding:0 !important;box-sizing:border-box;justify-content:center;gap:0;}
+  .coord-box:not(.expanded) #coordToggle{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:0;margin:0;}
+  .coord-box:not(.expanded) #coordToggle .pin-ic{width:20px;height:20px;background-size:contain;background-position:center;background-repeat:no-repeat;}
   .maplibregl-ctrl-group button:hover{background:rgba(255,255,255,.08);}
   .maplibregl-ctrl-attrib{background:transparent !important;font-size:10px;}
   .maplibregl-ctrl-attrib a{color:var(--text-muted);}
@@ -1301,7 +1303,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.28 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.29 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
