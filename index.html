@@ -1303,7 +1303,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.33 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.34 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -1531,7 +1531,7 @@
       var n = document.createElement('div');
       n.className = 'mini-north';
       n.title = 'Nord';
-      n.innerHTML = '<svg width="22" height="33" viewBox="0 0 22 33" aria-hidden="true"><text x="11" y="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13" fill="#e5383b" stroke="#fff" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round">N</text><path d="M11 16 L17 32 L11 28 L5 32 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 16 L11 28 L5 32 Z" fill="#b97a1e"/></svg>';
+      n.innerHTML = '<svg width="22" height="33" viewBox="0 0 22 33" aria-hidden="true"><text x="11" y="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13" fill="#e8a33d" stroke="#fff" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round">N</text><path d="M11 16 L17 32 L11 28 L5 32 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 16 L11 28 L5 32 Z" fill="#b97a1e"/></svg>';
       miniMap.getContainer().appendChild(n);
       miniMap.on('rotate', function(){ n.style.transform = 'rotate(' + (-miniMap.getBearing()) + 'deg)'; });
     })();
