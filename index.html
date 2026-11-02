@@ -1303,7 +1303,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.31 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.32 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -1531,7 +1531,7 @@
       var n = document.createElement('div');
       n.className = 'mini-north';
       n.title = 'Nord';
-      n.innerHTML = '<svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><text x="11" y="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13" fill="#e5383b">N</text><path d="M11 13 L17 29 L11 25 L5 29 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 13 L11 25 L5 29 Z" fill="#b97a1e"/></svg>';
+      n.innerHTML = '<svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><text x="11" y="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13" fill="#e5383b" stroke="#fff" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round">N</text><path d="M11 13 L17 29 L11 25 L5 29 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 13 L11 25 L5 29 Z" fill="#b97a1e"/></svg>';
       miniMap.getContainer().appendChild(n);
       miniMap.on('rotate', function(){ n.style.transform = 'rotate(' + (-miniMap.getBearing()) + 'deg)'; });
     })();
@@ -1646,7 +1646,7 @@
 
   var CURSOR_TARGET = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><g stroke='%23000' stroke-width='3' stroke-linecap='round'><line x1='11' y1='2' x2='11' y2='8'/><line x1='11' y1='14' x2='11' y2='20'/><line x1='2' y1='11' x2='8' y2='11'/><line x1='14' y1='11' x2='20' y2='11'/><circle cx='11' cy='11' r='2.4' fill='none'/></g><g stroke='white' stroke-width='1.4' stroke-linecap='round'><line x1='11' y1='2' x2='11' y2='8'/><line x1='11' y1='14' x2='11' y2='20'/><line x1='2' y1='11' x2='8' y2='11'/><line x1='14' y1='11' x2='20' y2='11'/><circle cx='11' cy='11' r='2.4' fill='none'/></g></svg>\") 11 11, crosshair";
   var CURSOR_GRAB = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14.5' fill='rgba(20,25,34,.72)' stroke='%23e8a33d' stroke-width='1.6'/><g transform='translate(8.56 8.56) scale(0.62)' fill='none' stroke='%23e8a33d' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2v20'/><path d='m15 19-3 3-3-3'/><path d='m19 9 3 3-3 3'/><path d='M2 12h20'/><path d='m5 9-3 3 3 3'/><path d='m9 5 3-3 3 3'/></g></svg>\") 16 16, move";   // pastille « déplacer » sur un point
-  var CURSOR_GRABBING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28'><g fill='none' stroke='%2314181f' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'><path d='M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'/><path d='M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'/><path d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/></g><g fill='none' stroke='%23e8a33d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'/><path d='M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'/><path d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/></g></svg>\") 14 14, grabbing";   // main orange (contour) pendant le déplacement de la carte
+  var CURSOR_GRABBING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28'><g fill='none' stroke='%2314181f' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'><path d='M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'/><path d='M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'/><path d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/></g><g fill='none' stroke='%23e8a33d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'/><path d='M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'/><path d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/></g></svg>\") 14 14, grabbing";   // main orange (contour) pendant le déplacement de la carte
 
   // Curseur : flèche au repos ; cible pendant la création d'un tracé ; croix pendant un choix sur la carte
   var manualDrawing = false;
