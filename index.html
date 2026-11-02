@@ -418,7 +418,7 @@
   .search-results div:last-child{border-bottom:none;}
   .search-results div:hover{background:var(--panel-2);}
 
-  #map{flex:2;min-width:0;min-height:300px;position:relative;}
+  #map{flex:2;min-width:0;min-height:300px;position:relative;order:3;}
 
   .maplibregl-ctrl-group{
     background:var(--glass);
@@ -455,13 +455,15 @@
     min-width:300px;
     max-width:420px;
     background:var(--panel);
-    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
     display:flex;
     flex-direction:column;
     overflow:hidden;
+    order:1;
   }
 
   #resizeHandle{
+    order:2;
     flex:0 0 6px;
     width:6px;
     background:var(--border);
@@ -498,12 +500,12 @@
   .in-use-host.in-use::after{content:'';position:absolute;top:1px;right:1px;width:6px;height:6px;border-radius:50%;
     background:var(--accent);opacity:.85;pointer-events:none;z-index:2;}
   #sideToggle{
-    position:absolute;top:50%;right:0;transform:translateY(-50%);z-index:6;
-    width:22px;height:56px;padding:0;border:1px solid var(--border);border-right:none;
-    border-radius:8px 0 0 8px;background:var(--glass);color:var(--accent);
+    position:absolute;top:50%;left:0;transform:translateY(-50%);z-index:6;
+    width:22px;height:56px;padding:0;border:1px solid var(--border);border-left:none;
+    border-radius:0 8px 8px 0;background:var(--glass);color:var(--accent);
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
     display:flex;align-items:center;justify-content:center;cursor:pointer;
-    box-shadow:-2px 2px 8px rgba(0,0,0,.35);transition:background .15s ease;
+    box-shadow:2px 2px 8px rgba(0,0,0,.35);transition:background .15s ease;
   }
   #sideToggle:hover{background:var(--panel-2);}
   #sideToggle svg{transition:transform .2s ease;}
@@ -816,12 +818,12 @@
 
   @media (max-width:760px){
     .body{flex-direction:column;}
-    #map{height:52vh;flex:none;}
-    .side{max-width:none;border-left:none;border-top:1px solid var(--border);}
+    #map{height:52vh;flex:none;order:1;}
+    .side{max-width:none;border-right:none;border-top:1px solid var(--border);order:2;}
     #resizeHandle{display:none;}
-    #sideToggle{top:auto;bottom:0;right:50%;transform:translateX(50%);width:56px;height:22px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;}
-    #sideToggle svg{transform:rotate(90deg);}
-    .body.side-collapsed #sideToggle svg{transform:rotate(-90deg);}
+    #sideToggle{top:auto;bottom:0;left:50%;transform:translateX(-50%);width:56px;height:22px;border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;}
+    #sideToggle svg{transform:rotate(-90deg);}
+    .body.side-collapsed #sideToggle svg{transform:rotate(90deg);}
     .body.side-collapsed #map{flex:1;height:auto;}
   }
 </style>
@@ -1211,7 +1213,7 @@
           <option value="lambert2008">Lambert 2008</option>
         </select>
       </div>
-      <button id="sideToggle" title="Masquer le panneau latéral" aria-label="Masquer le panneau latéral"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      <button id="sideToggle" title="Masquer le panneau latéral" aria-label="Masquer le panneau latéral"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
       <div class="hdr-menu map-menu maplibregl-ctrl" id="menuMap">
         <button class="info-btn" type="button" title="Fond de carte et superpositions" aria-label="Fond de carte" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></button>
         <div class="hdr-pop">
@@ -1286,7 +1288,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.24 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.25 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -4573,7 +4575,7 @@
 
     handle.addEventListener('pointermove', function(e){
       if(!dragging) return;
-      var w = startWidth + (startX - e.clientX);
+      var w = startWidth + (e.clientX - startX);
       w = Math.max(MIN_W, Math.min(maxW(), w));
       side.style.width = w+'px';
       side.style.maxWidth = w+'px';
