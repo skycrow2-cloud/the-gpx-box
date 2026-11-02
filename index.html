@@ -946,19 +946,21 @@
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Sur un point (points visibles)</div>
       <ul style="margin:0 0 8px;padding-left:18px;">
         <li>Clic gauche + glisser : déplacer le point</li>
-        <li>Mini-carte (panneau de droite) : vue d'ensemble centrée sur la trace, avec le cadre de la vue actuelle et le point en cours de déplacement</li>
+        <li>Mini-carte (panneau latéral) : vue d'ensemble de la trace, avec le cadre orange de la vue actuelle, une échelle et la flèche du nord</li>
         <li>Clic droit : supprimer le point</li>
         <li>Survol prolongé : infobulle (altitude, distance) · case « Infobulles sur les points »</li>
       </ul>
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Sur la carte</div>
       <ul style="margin:0 0 8px;padding-left:18px;">
-        <li>Clic gauche sur une zone vide : ajouter un point</li>
+        <li>Clic gauche sur une zone vide : ajouter un point (crayon activé)</li>
+        <li>Clic droit : petit menu « Afficher les points » / « Infobulles sur les points »</li>
         <li>Clic gauche sur le tracé : insérer un point à cet endroit</li>
         <li>Clic gauche + glisser (zone vide) : déplacer la vue</li>
         <li>Clic droit + glisser : pivoter / incliner la vue 3D</li>
         <li>Molette : zoomer / dézoomer</li>
         <li>Bouton Street View 360° (dans la carte, sous les boutons de zoom) puis clic sur la carte : ouvre Google Street View à cet endroit (Échap pour annuler)</li>
-        <li>Survol du tracé : affiche la position correspondante sur le profil altimétrique</li>
+        <li>Survol du tracé : un rond blanc cerclé d'orange reste accroché à la ligne et la position s'affiche sur le profil altimétrique</li>
+        <li>Clic maintenu (ou doigt) sur le tracé + glisser : le rond suit le tracé sans déplacer la carte</li>
       </ul>
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Drapeaux</div>
       <ul style="margin:0 0 8px;padding-left:18px;">
@@ -968,11 +970,12 @@
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Clavier</div>
       <ul style="margin:0 0 8px;padding-left:18px;">
         <li>Échap : annule la sélection en cours, sinon annule le dernier clic (dernier point ajouté)</li>
+        <li>Entrée dans la recherche de lieu vide : recentre la carte sur votre position</li>
       </ul>
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Profil altimétrique</div>
       <ul style="margin:0 0 8px;padding-left:18px;">
-        <li>Survol du profil : un point bleu suit la trace sur la carte, avec altitude, pente et distance</li>
-        <li>Clic maintenu + glisser : la carte se recentre sur le point bleu</li>
+        <li>Survol du profil : le rond de suivi parcourt la trace sur la carte, avec altitude, pente et distance</li>
+        <li>Clic maintenu + glisser : la carte se recentre sur le rond de suivi</li>
       </ul>
       <div style="font-weight:600;margin:8px 0 4px;color:var(--text-muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;">Importer un tracé</div>
       <ul style="margin:0 0 8px;padding-left:18px;">
@@ -999,12 +1002,13 @@
           <li><span class="di" data-ic="doc"></span><span><b>Aide et documentation</b> : cette fenêtre, avec l'aide rapide des gestes en tête (se ferme avec <kbd>Échap</kbd>).</span></li>
           <li><span class="di" data-ic="export"></span><span><b>Exporter en .GPX</b> : flèche vers le haut, à côté de l'import (à partir de deux points).</span></li>
           <li><span class="di" data-ic="streetview"></span><span><b>Google Street View</b> : activer le bouton dans la carte, sous les boutons de zoom, puis cliquer sur la carte ; Street View s'ouvre dans un nouvel onglet, au plus près de l'endroit cliqué. <kbd>Échap</kbd> ou un nouveau clic sur le bouton annule.</span></li>
-          <li><span class="di" data-ic="search"></span><span><b>Recherche</b> d'un lieu ou d'une adresse, en haut à gauche de la carte.</span></li>
-          <li><span class="di" data-ic="coord"></span><span><b>Coordonnées du curseur</b> (WGS84, Lambert 72 ou Lambert 2008), en bas à gauche de la carte.</span></li>
+          <li><span class="di" data-ic="search"></span><span><b>Recherche</b> d'un lieu ou d'une adresse, en haut à gauche de la carte. Entrée sur le champ vide : recentrer sur votre position.</span></li>
+          <li><span class="di" data-ic="coord"></span><span><b>Coordonnées du curseur</b> (WGS84, Lambert 72 ou Lambert 2008), en bas à droite de la carte.</span></li>
           <li><span class="di" data-ic="reset"></span><span><b>Réinitialiser l'itinéraire</b> : efface départ, arrivée et passages obligés du panneau d'itinéraire.</span></li>
         </ul>
 
         <h3>Tracer</h3>
+        <p>Au démarrage, une petite fenêtre (déplaçable) propose de <b>tracer à la main</b> ou de <b>suggérer un itinéraire</b>.</p>
         <ul class="doc-icons">
           <li><span class="di" data-ic="vertex"></span><span><b>Créer un point</b> : activez le crayon (en haut à droite), puis cliquez sur la carte. Les points sont numérotés dans l'ordre. Re-cliquer sur le crayon termine (ou reprend) le tracé.</span></li>
           <li><span class="di" data-ic="start"></span><span><b>Départ</b> : le premier point est marqué d'un drapeau vert.</span></li>
@@ -1016,15 +1020,19 @@
           <li><span class="di" data-ic="empty"></span><span><b>Annuler</b> : <kbd>Échap</kbd> annule la sélection en cours, sinon le dernier point ajouté.</span></li>
         </ul>
 
-        <h3>Barre d'outils et boutons de tête</h3>
+        <h3>Boutons de tête, réglages et fonds de carte</h3>
         <ul class="doc-icons">
           <li><span class="di" data-ic="btnreset"></span><span><b>Tout effacer</b> : remet le tracé à zéro (une confirmation est demandée). Icône flèche circulaire, en haut à droite.</span></li>
           <li><span class="di" data-ic="btnfit"></span><span><b>Vue générale</b> : recadre la carte sur l'ensemble du tracé (disponible dès qu'un point est placé).</span></li>
-          <li><span class="di" data-ic="swatch"></span><span><b>Couleur</b> : choisit la couleur de la trace et des points. Le choix est mémorisé.</span></li>
-          <li><span class="di" data-ic="chk"></span><span><b>Photo aérienne</b> : remplace le fond topographique. Un curseur translucide <b>OpenTopoMap</b> apparaît alors en bas de la carte : il règle l'opacité de la carte topographique superposée à la photo, de 0 % (photo seule) à 100 % (carte opaque). Il démarre à 30 %, soit 70 % de transparence ; le survol indique aussi la transparence. Décocher la photo masque le curseur et le remet à 30 %.</span></li>
-          <li><span class="di" data-ic="chk"></span><span><b>Relief 3D</b> : active le relief ; la glissière verticale ou le clic droit + glisser règlent l'inclinaison.</span></li>
-          <li><span class="di" data-ic="chk"></span><span><b>Infobulles sur les points</b> : altitude et distance au survol prolongé d'un point.</span></li>
-          <li><span class="di" data-ic="chk"></span><span><b>Cacher les points</b> : masque les points numérotés (drapeaux et tracé restent visibles) et passe le tracé en lecture seule. Disponible seulement quand un tracé est présent.</span></li>
+          <li><span class="di">✏️</span><span><b>Crayon</b> : active le dessin à la main (un clic = un point) ; re-cliquer termine le tracé (le dernier point devient l'arrivée) ou reprend un tracé terminé.</span></li>
+          <li><span class="di">⚙️</span><span><b>Réglages</b> (engrenage) : <b>Thème</b> foncé ou clair (calqué sur GPX 3D), <b>Couleur</b> et <b>Épaisseur</b> de la trace, infobulles et « Cacher les points ». Les choix sont mémorisés.</span></li>
+          <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : OpenTopoMap, CartoWeb.be (IGN Belgique), Plan IGN (France), Geoportail.lu (Luxembourg) ou CyclOSM ; superpositions Photo aérienne, Sentiers balisés (Waymarked Trails) et Relief 3D.</span></li>
+          <li><span class="di">•</span><span>Un petit point orange signale l'outil ou le menu en cours d'utilisation ; ouvrir un outil ferme celui qui était ouvert.</span></li>
+          <li><span class="di" data-ic="swatch"></span><span><b>Couleur</b> : choisit la couleur de la trace et des points (menu Réglages). Le choix est mémorisé.</span></li>
+          <li><span class="di" data-ic="chk"></span><span><b>Photo aérienne</b> (menu Fond de carte) : passe sous le fond choisi. Un curseur translucide apparaît alors en bas de la carte : il règle l'opacité de la carte topographique superposée à la photo, de 0 % (photo seule) à 100 % (carte opaque). Il démarre à 30 %, soit 70 % de transparence ; le survol indique aussi la transparence. Décocher la photo masque le curseur et le remet à 30 %.</span></li>
+          <li><span class="di" data-ic="chk"></span><span><b>Relief 3D</b> (menu Fond de carte) : active le relief ; la glissière verticale ou le clic droit + glisser règlent l'inclinaison.</span></li>
+          <li><span class="di" data-ic="chk"></span><span><b>Infobulles sur les points</b> (Réglages ou clic droit sur la carte) : altitude et distance au survol prolongé d'un point.</span></li>
+          <li><span class="di" data-ic="chk"></span><span><b>Cacher les points</b> (Réglages ou clic droit sur la carte) : masque les points numérotés (drapeaux et tracé restent visibles) et passe le tracé en lecture seule. Disponible seulement quand un tracé est présent.</span></li>
         </ul>
 
         <h3>Importer un tracé</h3>
@@ -1050,16 +1058,16 @@
 
         <h3>Aperçu de la trace</h3>
         <ul class="doc-icons">
-          <li><span class="di" data-ic="mini"></span><span>La mini-carte du panneau de droite reste centrée sur l'ensemble de la trace. Le cadre en pointillé montre la zone affichée sur la grande carte ; si l'on s'éloigne de la trace, la mini-carte s'élargit pour garder ce cadre visible, puis se recadre sur la trace au retour.</span></li>
+          <li><span class="di" data-ic="mini"></span><span>La mini-carte du panneau latéral montre la trace, avec une échelle et la flèche du nord. Le cadre orange montre la zone affichée sur la grande carte ; si l'on s'éloigne de la trace, la mini-carte s'élargit pour garder ce cadre visible, puis se recadre sur la trace au retour.</span></li>
           <li><span class="di" data-ic="dot"></span><span>Un point bleu suit le sommet en cours de déplacement, ou la position survolée sur le profil.</span></li>
         </ul>
 
         <h3>Profil altimétrique et statistiques</h3>
         <ul>
           <li>Les altitudes sont lues dans le modèle numérique de terrain (MNT, tuiles Terrarium AWS), sans limite de requêtes. Un message sous le profil indique la progression.</li>
-          <li>Le panneau de droite donne la distance, le nombre de points, les dénivelés + et −, les altitudes min et max, et la vitesse moyenne si le fichier importé en contient. Le profil et la mini-carte s'adaptent à la taille de la fenêtre.</li>
-          <li>Survoler le profil déplace un point bleu <span class="di" data-ic="dot"></span> le long de la trace sur la carte, avec l'altitude, la pente et la distance. Clic maintenu + glisser : la carte suit le point bleu.</li>
-          <li>Survoler le tracé sur la carte affiche la position correspondante sur le profil.</li>
+          <li>Le panneau latéral donne la distance, le nombre de points, les dénivelés + et −, les altitudes min et max, et la vitesse moyenne si le fichier importé en contient. Le profil et la mini-carte s'adaptent à la taille de la fenêtre.</li>
+          <li>Survoler le profil déplace le rond de suivi le long de la trace sur la carte, avec l'altitude, la pente et la distance. Clic maintenu + glisser : la carte suit le rond. Vide, le profil garde ses axes.</li>
+          <li>Survoler le tracé sur la carte : le rond reste accroché à la ligne et la position s'affiche sur le profil ; clic maintenu (ou doigt) + glisser pour parcourir le tracé sans déplacer la carte.</li>
           <li class="doc-note">Sur une trace très dense, les petites irrégularités du MNT peuvent gonfler légèrement le dénivelé cumulé.</li>
         </ul>
 
