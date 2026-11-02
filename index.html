@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>try{if(localStorage.getItem('gpxbox-theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The-GPX-Box</title>
@@ -850,6 +851,44 @@
     .body.side-collapsed #sideToggle svg{transform:rotate(90deg);}
     .body.side-collapsed #map{flex:1;height:auto;}
   }
+  /* ------------------------------------------------ thème clair (Réglages › Thème), calqué sur GPX 3D */
+  :root[data-theme="light"]{
+    color-scheme: light;
+    --bg:#eeebe4;
+    --panel:#f7f5f0;
+    --panel-2:#fbfaf7;
+    --border:#d8d2c6;
+    --text:#1f2329;
+    --text-muted:#5b626d;
+    --accent:#ff8a00;
+    --accent-dark:#e07800;
+    --accent-soft: rgba(255,138,0,.16);
+    --glass: rgba(255,255,255,.38);
+    --glass-hover: rgba(255,255,255,.58);
+    --glass-strong: rgba(255,255,255,.64);
+    --tip-bg: rgba(255,255,255,.82);
+    --tip-blur: blur(6px);
+    --win-bg: rgba(250,249,246,.52);
+    --win-blur: blur(16px) saturate(1.3);
+    --accent-2:#1d8796;
+    --danger:#c0463b;
+  }
+  :root[data-theme="light"] header{background:linear-gradient(180deg, rgba(250,249,246,.94), rgba(242,239,233,.94));box-shadow:0 1px 0 rgba(255,138,0,.5), 0 4px 18px rgba(40,30,10,.12);}
+  :root[data-theme="light"] .hdr-pop, :root[data-theme="light"] #importPanel, :root[data-theme="light"] #routePanel,
+  :root[data-theme="light"] #osmPanel, :root[data-theme="light"] #startInvite, :root[data-theme="light"] .doc-modal,
+  :root[data-theme="light"] .search-results{ --panel: rgba(255,255,255,.55); --panel-2: rgba(255,255,255,.66); }
+  :root[data-theme="light"] .hdr-pop option, :root[data-theme="light"] #importPanel option,
+  :root[data-theme="light"] #routePanel option, :root[data-theme="light"] #osmPanel option{background:#ffffff;}
+  :root[data-theme="light"] #startInvite .si-actions .btn{background:rgba(255,255,255,.55);border-color:rgba(255,138,0,.5);}
+  :root[data-theme="light"] .mini-north{background:rgba(255,255,255,.55);}
+  :root[data-theme="light"] .maplibregl-ctrl-group, :root[data-theme="light"] .coord-box, :root[data-theme="light"] .search-row,
+  :root[data-theme="light"] .pitch-control, :root[data-theme="light"] #sideToggle, :root[data-theme="light"] .topo-opacity,
+  :root[data-theme="light"] #mapCtxMenu{border-color:rgba(255,138,0,.5);box-shadow:0 4px 14px rgba(40,30,10,.16);}
+  :root[data-theme="light"] .maplibregl-ctrl-attrib a{color:var(--text-muted);}
+  .theme-switch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);}
+  .theme-switch span{flex:1;}
+  .theme-switch .btn{padding:3px 10px;font-size:11.5px;}
+  .theme-switch .btn.active{border-color:var(--accent);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -878,6 +917,11 @@
       <div class="hdr-menu" id="menuSettings">
         <button class="info-btn" type="button" title="Réglages d'affichage" aria-label="Réglages d'affichage" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <div class="hdr-pop">
+          <div class="hdr-pop-title">Apparence</div>
+            <div class="theme-switch"><span>Thème</span>
+              <button class="btn" id="themeDark" type="button">Foncé</button>
+              <button class="btn" id="themeLight" type="button">Clair</button>
+            </div>
           <div class="hdr-pop-title">Tracé</div>
             <label class="toggle" title="Couleur de la trace et des points"><input type="color" id="trackColor" value="#e8a33d" style="width:26px;height:20px;padding:0;border:1px solid var(--border);border-radius:4px;background:none;cursor:pointer;"> Couleur</label>
             <label class="toggle" title="Épaisseur de la trace">Épaisseur <input type="range" id="trackWidth" min="2" max="10" step="1" value="4" style="width:100px;"> <span id="trackWidthVal">4&nbsp;px</span></label>
@@ -4043,7 +4087,13 @@
 
   // ---------- Profil altimétrique (SVG) ----------
   var svgNS = 'http://www.w3.org/2000/svg';
+  function profileColors(){
+    var light = document.documentElement.getAttribute('data-theme') === 'light';
+    return light ? { text:'#5b626d', grid:'#d6d0c4', axis:'#b9b2a3', msg:'#7a818b', fade:'#f7f5f0', frame:'#cfc8bb' }
+                 : { text:'#8b93a1', grid:'#2a323c', axis:'#3a4350', msg:'#6b7380', fade:'#1b222a', frame:'#4a5462' };
+  }
   function drawProfile(){
+    var PC = profileColors();
     var svg = document.getElementById('profileSvg');
     var empty = document.getElementById('profileEmpty');
     svg.innerHTML = '';
@@ -4066,23 +4116,23 @@
       svg.style.display = 'block';
       var NS = svgNS;
       var add = function(tag, attrs){ var n = document.createElementNS(NS, tag); for(var k in attrs) n.setAttribute(k, attrs[k]); svg.appendChild(n); return n; };
-      var t0 = add('text', { x:6, y:13, 'font-size':10.5, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+      var t0 = add('text', { x:6, y:13, 'font-size':10.5, fill:PC.text, 'font-family':"'Inter',sans-serif" });
       t0.textContent = 'Altitude (m)';
       for(var gy0=1; gy0<=4; gy0++){
         var yy = H-padB - (H-padT-padB)*gy0/4;
-        add('line', { x1:padL, x2:W-padR, y1:yy, y2:yy, stroke:'#2a323c', 'stroke-width':1, 'stroke-dasharray':'3,4' });
+        add('line', { x1:padL, x2:W-padR, y1:yy, y2:yy, stroke:PC.grid, 'stroke-width':1, 'stroke-dasharray':'3,4' });
       }
-      add('line', { x1:padL, x2:W-padR, y1:H-padB, y2:H-padB, stroke:'#3a4350', 'stroke-width':1.2 });   // axe X
-      add('line', { x1:padL, x2:padL, y1:padT, y2:H-padB, stroke:'#3a4350', 'stroke-width':1.2 });       // axe Y
+      add('line', { x1:padL, x2:W-padR, y1:H-padB, y2:H-padB, stroke:PC.axis, 'stroke-width':1.2 });   // axe X
+      add('line', { x1:padL, x2:padL, y1:padT, y2:H-padB, stroke:PC.axis, 'stroke-width':1.2 });       // axe Y
       for(var gx0=0; gx0<=5; gx0++){
         var xx = padL + (W-padL-padR)*gx0/5;
-        add('line', { x1:xx, x2:xx, y1:H-padB, y2:H-padB+3, stroke:'#3a4350', 'stroke-width':1 });
+        add('line', { x1:xx, x2:xx, y1:H-padB, y2:H-padB+3, stroke:PC.axis, 'stroke-width':1 });
       }
-      var lx = add('text', { x:W-padR, y:H-padB+14, 'text-anchor':'end', 'font-size':10, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+      var lx = add('text', { x:W-padR, y:H-padB+14, 'text-anchor':'end', 'font-size':10, fill:PC.text, 'font-family':"'Inter',sans-serif" });
       lx.textContent = 'Distance (km)';
-      var lz = add('text', { x:padL-6, y:H-padB+3.5, 'text-anchor':'end', 'font-size':10, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+      var lz = add('text', { x:padL-6, y:H-padB+3.5, 'text-anchor':'end', 'font-size':10, fill:PC.text, 'font-family':"'Inter',sans-serif" });
       lz.textContent = '0';
-      var msg = add('text', { x:(padL+W-padR)/2, y:(padT+H-padB)/2+4, 'text-anchor':'middle', 'font-size':11.5, fill:'#6b7380', 'font-family':"'Inter',sans-serif" });
+      var msg = add('text', { x:(padL+W-padR)/2, y:(padT+H-padB)/2+4, 'text-anchor':'middle', 'font-size':11.5, fill:PC.msg, 'font-family':"'Inter',sans-serif" });
       msg.textContent = points.length < 2 ? 'Placez au moins deux points pour afficher le profil' : 'Altitudes en cours de chargement…';
       return;
     }
@@ -4134,11 +4184,11 @@
     }
     // Assombrissement vers le bas
     var gFade = el('linearGradient', { id:'profFade', x1:0, y1:0, x2:0, y2:1 }, defs);
-    el('stop', { offset:0, 'stop-color':'#1b222a', 'stop-opacity':0.35 }, gFade);
-    el('stop', { offset:1, 'stop-color':'#1b222a', 'stop-opacity':0.85 }, gFade);
+    el('stop', { offset:0, 'stop-color':PC.fade, 'stop-opacity':0.35 }, gFade);
+    el('stop', { offset:1, 'stop-color':PC.fade, 'stop-opacity':0.85 }, gFade);
 
     // Titre
-    var title = el('text', { x:6, y:13, 'font-size':10.5, fill:'#8b93a1', 'font-family':"'Inter',sans-serif" });
+    var title = el('text', { x:6, y:13, 'font-size':10.5, fill:PC.text, 'font-family':"'Inter',sans-serif" });
     title.textContent = 'Altitude (m)';
 
     // Grille horizontale (pointillés) + graduations d'altitude
@@ -4146,16 +4196,16 @@
     for(var g=0; g<=NY; g++){
       var ge = eMin + (eMax-eMin)*g/NY;
       var gy = y(ge);
-      el('line', { x1:padL, x2:W-padR, y1:gy, y2:gy, stroke:'#2a323c', 'stroke-width':1, 'stroke-dasharray': g===0 ? '' : '3,4' });
-      var ty = el('text', { x:padL-6, y:gy+3.5, 'text-anchor':'end', 'font-size':10, fill:'#8b93a1', 'font-family':MONO });
+      el('line', { x1:padL, x2:W-padR, y1:gy, y2:gy, stroke:PC.grid, 'stroke-width':1, 'stroke-dasharray': g===0 ? '' : '3,4' });
+      var ty = el('text', { x:padL-6, y:gy+3.5, 'text-anchor':'end', 'font-size':10, fill:PC.text, 'font-family':MONO });
       ty.textContent = Math.round(ge);
     }
     // Graduations de distance
     var NX = 5;
     for(var gx=0; gx<=NX; gx++){
       var px = padL + (W-padL-padR)*gx/NX;
-      el('line', { x1:px, x2:px, y1:H-padB, y2:H-padB+3, stroke:'#2a323c', 'stroke-width':1 });
-      var tx = el('text', { x:px, y:H-padB+14, 'text-anchor': gx===0 ? 'start' : (gx===NX ? 'end' : 'middle'), 'font-size':10, fill:'#8b93a1', 'font-family':MONO });
+      el('line', { x1:px, x2:px, y1:H-padB, y2:H-padB+3, stroke:PC.grid, 'stroke-width':1 });
+      var tx = el('text', { x:px, y:H-padB+14, 'text-anchor': gx===0 ? 'start' : (gx===NX ? 'end' : 'middle'), 'font-size':10, fill:PC.text, 'font-family':MONO });
       tx.textContent = (totalD*gx/NX/1000).toFixed(1) + ' km';
     }
 
@@ -4181,7 +4231,7 @@
       fill:'none', stroke:'url(#profStroke)', 'stroke-width':2, 'stroke-linejoin':'round', 'stroke-linecap':'round' });
 
     // Repère de fin de trace
-    el('line', { x1:W-padR, x2:W-padR, y1:padT, y2:H-padB, stroke:'#4a5462', 'stroke-width':1.5 });
+    el('line', { x1:W-padR, x2:W-padR, y1:padT, y2:H-padB, stroke:PC.frame, 'stroke-width':1.5 });
 
     var posLine = document.createElementNS(svgNS,'line');
     posLine.setAttribute('y1', padT);
@@ -4493,6 +4543,28 @@
     document.addEventListener('click', close);
     document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') close(); });
     map.on('movestart', close);
+  })();
+
+  // ---------- Thème clair / foncé (calqué sur GPX 3D) ----------
+  (function initTheme(){
+    var bD = document.getElementById('themeDark'), bL = document.getElementById('themeLight');
+    function isLight(){ return document.documentElement.getAttribute('data-theme') === 'light'; }
+    function sync(){ bD.classList.toggle('active', !isLight()); bL.classList.toggle('active', isLight()); }
+    function setTheme(light){
+      if(light) document.documentElement.setAttribute('data-theme', 'light');
+      else document.documentElement.removeAttribute('data-theme');
+      try{ localStorage.setItem('gpxbox-theme', light ? 'light' : 'dark'); }catch(e){}
+      sync();
+      try{
+        if(map.setSky) map.setSky({ 'sky-color': light ? '#a9cbe6' : '#0b1a2a', 'horizon-color': light ? '#e6edf2' : '#3a4a5a',
+          'fog-color': light ? '#eeebe4' : '#0e1217', 'fog-ground-blend':0.5, 'sky-horizon-blend':0.5, 'horizon-fog-blend':0.6 });
+      }catch(e){}
+      if(typeof drawProfile === 'function') drawProfile();
+    }
+    bD.addEventListener('click', function(){ setTheme(false); });
+    bL.addEventListener('click', function(){ setTheme(true); });
+    sync();
+    if(isLight()) map.once('load', function(){ setTheme(true); });
   })();
 
   // ---------- Un seul outil ouvert à la fois ----------
