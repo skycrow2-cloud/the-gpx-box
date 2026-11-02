@@ -249,7 +249,7 @@
   .header-opts .toggle{white-space:nowrap;font-size:12.5px;}
   .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .header-right .toolbar-right{margin-left:0;}
-  .header-right .hint{max-width:150px;line-height:1.25;text-align:right;}
+  .header-right .hint{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
   @media (max-width:1000px){.header-right .hint{display:none;}}
   @media (max-width:760px){header{flex-wrap:wrap;}.header-opts{margin-left:0;padding-left:0;border-left:none;}}
 
@@ -3524,14 +3524,14 @@
   function refreshHint(){
     syncHidePointsAvailability();
     var parts = [];   // plus de compteur « points placés » : seulement les avertissements
-    if(pointsHidden) parts.push('points cachés (lecture seule)');
+    if(pointsHidden) parts.push('points cachés');
     if(backtrackRuns && backtrackRuns.length){
       var bl = backtrackRuns.reduce(function(a, r){ return a + r.len; }, 0);
       parts.push('⚠ ' + backtrackRuns.length + ' aller-retour' + (backtrackRuns.length > 1 ? 's' : '') + ' (' + fmtBacktrackLen(bl) + ')');
     }
     var txt = parts.join(' · ');
     var h = document.getElementById('liveHint');
-    h.textContent = txt; h.style.display = txt ? '' : 'none';
+    h.textContent = txt; h.title = txt + (pointsHidden ? ' (lecture seule)' : ''); h.style.display = txt ? '' : 'none';
   }
 
   // ---------- Cacher / afficher les points (verrouille l'édition quand cachés) ----------
