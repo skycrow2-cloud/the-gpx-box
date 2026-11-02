@@ -583,7 +583,7 @@
     border-top:1px solid var(--border);
   }
   #miniMap{ flex:1 1 0; min-height:110px; position:relative; }
-  .mini-north{position:absolute;top:6px;right:6px;z-index:2;width:28px;height:36px;border-radius:6px;
+  .mini-north{position:absolute;top:6px;right:6px;z-index:2;width:28px;height:40px;border-radius:6px;
     background:rgba(20,24,31,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;pointer-events:none;
     box-shadow:0 1px 4px rgba(0,0,0,.4);}
   #miniMap .maplibregl-ctrl-scale{font-size:10px;padding:0 4px;border-width:1.5px;opacity:.85;}
@@ -1303,7 +1303,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.32 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.33 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -1531,7 +1531,7 @@
       var n = document.createElement('div');
       n.className = 'mini-north';
       n.title = 'Nord';
-      n.innerHTML = '<svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><text x="11" y="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13" fill="#e5383b" stroke="#fff" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round">N</text><path d="M11 13 L17 29 L11 25 L5 29 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 13 L11 25 L5 29 Z" fill="#b97a1e"/></svg>';
+      n.innerHTML = '<svg width="22" height="33" viewBox="0 0 22 33" aria-hidden="true"><text x="11" y="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="13" fill="#e5383b" stroke="#fff" stroke-width="1.6" paint-order="stroke" stroke-linejoin="round">N</text><path d="M11 16 L17 32 L11 28 L5 32 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 16 L11 28 L5 32 Z" fill="#b97a1e"/></svg>';
       miniMap.getContainer().appendChild(n);
       miniMap.on('rotate', function(){ n.style.transform = 'rotate(' + (-miniMap.getBearing()) + 'deg)'; });
     })();
