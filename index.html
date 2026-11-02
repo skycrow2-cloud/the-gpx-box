@@ -1855,9 +1855,14 @@
       layout:{ 'line-cap':'round', 'line-join':'round' },
       paint:{ 'line-color':'#000', 'line-width':22, 'line-opacity':0.001 } });
     map.on('mouseenter', 'route-hit', function(){ if(cursorBeforePan === null && !routePickMode && !pointsHidden && points.length >= 2) map.getCanvas().style.cursor = CURSOR_RING; });
-    map.on('mouseleave', 'route-hit', function(){ if(!trackScrub) updateIdleCursor(); });
+    map.on('mousemove', 'route-hit', function(e){
+      if(trackScrub || routePickMode || svPickMode || points.length < 2 || (cursorBeforePan !== null && cursorBeforePan !== undefined)) return;
+      scrubTo(e.lngLat);
+    });
+    map.on('mouseleave', 'route-hit', function(){ if(!trackScrub){ updateIdleCursor(); hideProfilePosition(); } });
     // Curseur rond (comme dans GPX 3D) pour glisser le long de la trace
-    var CURSOR_RING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><circle cx='10' cy='10' r='7' fill='white' fill-opacity='0.9' stroke='%23e8a33d' stroke-width='3'/><circle cx='10' cy='10' r='8.6' fill='none' stroke='%23000' stroke-opacity='0.35' stroke-width='1'/></svg>\") 10 10, pointer";
+    // Sur la trace, le curseur est masqué : c'est le rond de suivi, accroché à la ligne, qui le remplace (comme dans GPX 3D)
+    var CURSOR_RING = 'none';
     function scrubTo(lngLat){
       if(points.length < 2) return;
       showProfilePositionAtDistance(nearestDistanceOnTrack(lngLat).dist);
@@ -2015,9 +2020,9 @@
     miniShowDot(lng, lat);
     if(!profileMarker){
       var pel = document.createElement('div');
-      pel.style.width='14px'; pel.style.height='14px'; pel.style.borderRadius='50%';
-      pel.style.background='#49b6c4'; pel.style.border='3px solid #fff';
-      pel.style.boxShadow='0 1px 4px rgba(0,0,0,.6)';
+      pel.style.width='16px'; pel.style.height='16px'; pel.style.borderRadius='50%'; pel.style.boxSizing='border-box';
+      pel.style.background='rgba(255,255,255,.92)'; pel.style.border='3px solid #e8a33d';
+      pel.style.boxShadow='0 0 0 1px rgba(0,0,0,.35), 0 1px 4px rgba(0,0,0,.5)';
       pel.style.pointerEvents='none';
       profileMarker = new maplibregl.Marker({ element: pel }).setLngLat([lng, lat]).addTo(map);
     } else {
