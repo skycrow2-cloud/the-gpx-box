@@ -888,6 +888,10 @@
   .doc-link{margin-left:auto;margin-right:8px;background:transparent;border:1px solid var(--border);color:var(--accent);border-radius:6px;
     font-size:12px;padding:3px 9px;cursor:pointer;white-space:nowrap;}
   .doc-link:hover{border-color:var(--accent);}
+  /* Icônes flottantes : décalage --fdx / --fdy (propriété « translate », indépendante des transform existants) */
+  .floatable{translate:var(--fdx, 0px) var(--fdy, 0px);}
+  body.floating-on .floatable{touch-action:none;}
+  body.floating-on .floatable.float-dragging, body.floating-on .floatable.float-dragging *{cursor:grabbing !important;}
   .theme-switch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);}
   .theme-switch span{flex:1;}
   .theme-switch .btn{padding:3px 10px;font-size:11.5px;}
@@ -925,6 +929,8 @@
               <button class="btn" id="themeDark" type="button">Foncé</button>
               <button class="btn" id="themeLight" type="button">Clair</button>
             </div>
+            <label class="toggle" title="Les commandes posées sur la carte peuvent être déplacées en les faisant glisser"><input type="checkbox" id="chkFloating" autocomplete="off"> Icônes flottantes (déplaçables)</label>
+            <button class="btn" id="btnFloatReset" type="button" style="font-size:11.5px;padding:3px 10px;align-self:flex-start;">Remettre les icônes en place</button>
           <div class="hdr-pop-title">Tracé</div>
             <label class="toggle" title="Couleur de la trace et des points"><input type="color" id="trackColor" value="#e8a33d" style="width:26px;height:20px;padding:0;border:1px solid var(--border);border-radius:4px;background:none;cursor:pointer;"> Couleur</label>
             <label class="toggle" title="Épaisseur de la trace">Épaisseur <input type="range" id="trackWidth" min="2" max="10" step="1" value="4" style="width:100px;"> <span id="trackWidthVal">4&nbsp;px</span></label>
@@ -1029,7 +1035,7 @@
           <li><span class="di" data-ic="btnreset"></span><span><b>Tout effacer</b> : remet le tracé à zéro (une confirmation est demandée). Icône flèche circulaire, en haut à droite.</span></li>
           <li><span class="di" data-ic="btnfit"></span><span><b>Vue générale</b> : recadre la carte sur l'ensemble du tracé (disponible dès qu'un point est placé).</span></li>
           <li><span class="di">✏️</span><span><b>Crayon</b> : active le dessin à la main (un clic = un point) ; re-cliquer termine le tracé (le dernier point devient l'arrivée) ou reprend un tracé terminé.</span></li>
-          <li><span class="di">⚙️</span><span><b>Réglages</b> (engrenage) : <b>Thème</b> foncé ou clair (calqué sur GPX 3D), <b>Couleur</b> et <b>Épaisseur</b> de la trace, infobulles et « Cacher les points ». Les choix sont mémorisés.</span></li>
+          <li><span class="di">⚙️</span><span><b>Réglages</b> (engrenage) : <b>Thème</b> foncé ou clair (calqué sur GPX 3D), <b>Icônes flottantes</b> (les commandes de la carte se déplacent en les faisant glisser ; « Remettre les icônes en place » pour revenir aux positions d'origine), <b>Couleur</b> et <b>Épaisseur</b> de la trace, infobulles et « Cacher les points ». Les choix sont mémorisés.</span></li>
           <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : OpenTopoMap, CartoWeb.be (IGN Belgique), Plan IGN (France), Geoportail.lu (Luxembourg) ou CyclOSM ; superpositions Photo aérienne, Sentiers balisés (Waymarked Trails) et Relief 3D.</span></li>
           <li><span class="di">•</span><span>Un petit point orange signale l'outil ou le menu en cours d'utilisation ; ouvrir un outil ferme celui qui était ouvert.</span></li>
           <li><span class="di" data-ic="swatch"></span><span><b>Couleur</b> : choisit la couleur de la trace et des points (menu Réglages). Le choix est mémorisé.</span></li>
@@ -4577,6 +4583,101 @@
     bL.addEventListener('click', function(){ setTheme(true); });
     sync();
     if(isLight()) map.once('load', function(){ setTheme(true); });
+  })();
+
+  // ---------- Icônes flottantes (option Réglages) : commandes de la carte déplaçables ----------
+  (function initFloating(){
+    var KEY_ON = 'gpxbox.floating', KEY_POS = 'gpxbox.floatPos';
+    var chk = document.getElementById('chkFloating'), mapEl = document.getElementById('map');
+    var saved = {};
+    try{ saved = JSON.parse(localStorage.getItem(KEY_POS) || '{}') || {}; }catch(e){ saved = {}; }
+    var widgets = [];
+    function collect(){
+      var defs = [
+        ['search',  document.getElementById('searchBox')],
+        ['coord',   document.getElementById('coordBox')],
+        ['pitch',   document.querySelector('.pitch-control'), [document.getElementById('pitchTooltip')]],
+        ['opacity', document.getElementById('topoOpacityBox')],
+        ['scale',   document.querySelector('#map .maplibregl-ctrl-scale')]
+      ];
+      document.querySelectorAll('#map .maplibregl-ctrl-top-right > .maplibregl-ctrl').forEach(function(el, i){ defs.push(['tr' + i, el]); });
+      widgets = defs.filter(function(d){ return d[1]; }).map(function(d){
+        var p = saved[d[0]] || {};
+        return { id:d[0], el:d[1], followers:(d[2] || []).filter(Boolean), dx:+p.dx || 0, dy:+p.dy || 0 };
+      });
+    }
+    function setVars(w){
+      [w.el].concat(w.followers).forEach(function(t){
+        t.classList.add('floatable');
+        t.style.setProperty('--fdx', w.dx + 'px');
+        t.style.setProperty('--fdy', w.dy + 'px');
+      });
+    }
+    function clamp(w){
+      var r = w.el.getBoundingClientRect(), a = mapEl.getBoundingClientRect(), M = 4;
+      if(!r.width && !r.height) return;
+      var bl = r.left - w.dx, bt = r.top - w.dy;
+      w.dx = Math.round(Math.max(a.left + M - bl, Math.min(w.dx, a.right - M - r.width - bl)));
+      w.dy = Math.round(Math.max(a.top + M - bt, Math.min(w.dy, a.bottom - M - r.height - bt)));
+      setVars(w);
+    }
+    function persist(){
+      var out = {};
+      widgets.forEach(function(w){ if(w.dx || w.dy) out[w.id] = { dx:w.dx, dy:w.dy }; });
+      saved = out;
+      try{ localStorage.setItem(KEY_POS, JSON.stringify(out)); }catch(e){}
+    }
+    function on(){ return document.body.classList.contains('floating-on'); }
+    function bind(w){
+      var start = null, suppressClick = false;
+      w.el.addEventListener('pointerdown', function(ev){
+        if(!on() || ev.button !== 0) return;
+        if(ev.target.closest('input, select, textarea, .hdr-pop')) return;   // champs et menus ouverts : comportement normal
+        start = { x:ev.clientX, y:ev.clientY, dx:w.dx, dy:w.dy, moved:false, id:ev.pointerId };
+      }, true);
+      window.addEventListener('pointermove', function(ev){
+        if(!start || ev.pointerId !== start.id) return;
+        var mx = ev.clientX - start.x, my = ev.clientY - start.y;
+        if(!start.moved && Math.hypot(mx, my) < 5) return;          // petit mouvement = clic normal
+        if(!start.moved){ start.moved = true; w.el.classList.add('float-dragging'); }
+        w.dx = start.dx + mx; w.dy = start.dy + my;
+        clamp(w);
+        ev.preventDefault();
+      });
+      window.addEventListener('pointerup', function(ev){
+        if(!start || ev.pointerId !== start.id) return;
+        if(start.moved){ suppressClick = true; setTimeout(function(){ suppressClick = false; }, 0); persist(); }
+        w.el.classList.remove('float-dragging');
+        start = null;
+      });
+      w.el.addEventListener('click', function(ev){ if(suppressClick){ ev.stopPropagation(); ev.preventDefault(); suppressClick = false; } }, true);
+    }
+    function apply(enabled){
+      document.body.classList.toggle('floating-on', enabled);
+      chk.checked = enabled;
+      widgets.forEach(function(w){
+        if(enabled){ var p = saved[w.id] || {}; w.dx = +p.dx || 0; w.dy = +p.dy || 0; }
+        else { w.dx = 0; w.dy = 0; }
+        setVars(w);
+        if(enabled) clamp(w);
+      });
+    }
+    function init(){
+      collect();
+      widgets.forEach(bind);
+      var en = false; try{ en = localStorage.getItem(KEY_ON) === '1'; }catch(e){}
+      apply(en);
+    }
+    chk.addEventListener('change', function(){
+      try{ localStorage.setItem(KEY_ON, chk.checked ? '1' : '0'); }catch(e){}
+      apply(chk.checked);
+    });
+    document.getElementById('btnFloatReset').addEventListener('click', function(){
+      saved = {}; try{ localStorage.removeItem(KEY_POS); }catch(e){}
+      widgets.forEach(function(w){ w.dx = 0; w.dy = 0; setVars(w); });
+    });
+    window.addEventListener('resize', function(){ if(on()) widgets.forEach(clamp); });
+    if(map.loaded && map.loaded()) init(); else map.once('load', function(){ setTimeout(init, 50); });
   })();
 
   // ---------- Un seul outil ouvert à la fois ----------
