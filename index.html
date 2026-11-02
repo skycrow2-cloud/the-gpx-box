@@ -851,7 +851,7 @@
     <h1>The-GPX-Box</h1>
     <div class="header-right">
       <div class="toolbar-right">
-        <span class="hint" id="liveHint">Aucun point placé</span>
+        <span class="hint" id="liveHint"></span>
       </div>
       <div id="weatherBar" style="display:none;align-items:center;gap:6px;">
         <span id="weatherPlace" style="display:none;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:8px;margin-right:2px;border-right:1px solid var(--border);"><span class="pin-ic"></span><span id="weatherPlaceName"></span></span>
@@ -1303,7 +1303,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.34 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.35 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -3459,14 +3459,15 @@
 
   function refreshHint(){
     syncHidePointsAvailability();
-    var n = points.length;
-    var txt = n === 0 ? 'Aucun point placé' : n + ' point' + (n>1?'s':'') + ' placé' + (n>1?'s':'');
-    if(pointsHidden) txt += ' · points cachés (lecture seule)';
+    var parts = [];   // plus de compteur « points placés » : seulement les avertissements
+    if(pointsHidden) parts.push('points cachés (lecture seule)');
     if(backtrackRuns && backtrackRuns.length){
       var bl = backtrackRuns.reduce(function(a, r){ return a + r.len; }, 0);
-      txt += ' · ⚠ ' + backtrackRuns.length + ' aller-retour' + (backtrackRuns.length > 1 ? 's' : '') + ' (' + fmtBacktrackLen(bl) + ')';
+      parts.push('⚠ ' + backtrackRuns.length + ' aller-retour' + (backtrackRuns.length > 1 ? 's' : '') + ' (' + fmtBacktrackLen(bl) + ')');
     }
-    document.getElementById('liveHint').textContent = txt;
+    var txt = parts.join(' · ');
+    var h = document.getElementById('liveHint');
+    h.textContent = txt; h.style.display = txt ? '' : 'none';
   }
 
   // ---------- Cacher / afficher les points (verrouille l'édition quand cachés) ----------
