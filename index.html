@@ -1426,7 +1426,7 @@
       }
       var projLng = a.lng + dx*t, projLat = a.lat + dy*t;
       var d = haversine({lat:lngLat.lat,lng:lngLat.lng}, {lat:projLat,lng:projLng});
-      if(d < best.d){ best.d = d; best.dist = cum + segLen*t; }
+      if(d < best.d){ best.d = d; best.dist = cum + segLen*t; best.lat = projLat; best.lng = projLng; }
       cum += segLen;
     }
     return best;
@@ -1859,13 +1859,15 @@
       if(trackScrub || routePickMode || svPickMode || points.length < 2 || (cursorBeforePan !== null && cursorBeforePan !== undefined)) return;
       scrubTo(e.lngLat);
     });
-    map.on('mouseleave', 'route-hit', function(){ if(!trackScrub){ updateIdleCursor(); hideProfilePosition(); } });
+    map.on('mouseleave', 'route-hit', function(){ if(!trackScrub){ updateIdleCursor(); hideProfilePosition(); hideProfileDot(); } });
     // Curseur rond (comme dans GPX 3D) pour glisser le long de la trace
     // Sur la trace, le curseur est masqué : c'est le rond de suivi, accroché à la ligne, qui le remplace (comme dans GPX 3D)
     var CURSOR_RING = 'none';
     function scrubTo(lngLat){
       if(points.length < 2) return;
-      showProfilePositionAtDistance(nearestDistanceOnTrack(lngLat).dist);
+      var res = nearestDistanceOnTrack(lngLat);
+      showProfilePositionAtDistance(res.dist);
+      if(res.lat !== undefined) showProfileDot(res.lat, res.lng);   // rond de suivi accroché à la ligne
     }
     function scrubStart(e){
       if(routePickMode || svPickMode || points.length < 2) return;
@@ -1891,7 +1893,7 @@
     map.on('mousemove', scrubMove);
     map.on('touchmove', scrubMove);
     window.addEventListener('mouseup', scrubEnd);
-    map.on('touchend', function(){ scrubEnd(); setTimeout(hideProfilePosition, 1500); });
+    map.on('touchend', function(){ scrubEnd(); setTimeout(function(){ hideProfilePosition(); hideProfileDot(); }, 1500); });
     map.on('touchcancel', scrubEnd);
 
     // le conteneur peut ne pas avoir sa taille finale au tout premier rendu (layout flex)
