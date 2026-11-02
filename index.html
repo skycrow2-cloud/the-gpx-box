@@ -240,7 +240,7 @@
   /* Bouton « fond de carte » dans la carte, au-dessus de la barre d'assiette */
   /* Bouton « fond de carte » : contrôle de carte, sous Street View */
   .map-menu{position:relative;}
-  .map-menu > .info-btn{width:29px;height:29px;border-radius:4px;background:var(--glass);border:1px solid rgba(232,163,61,.35);
+  .map-menu > .info-btn{width:29px;height:29px;border-radius:50%;background:var(--glass);border:1px solid rgba(232,163,61,.35);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,.5);}
   .map-menu > .info-btn:hover{opacity:1;background:var(--glass-hover);box-shadow:none;}
   .map-menu > .info-btn > svg{width:17px;height:17px;}
@@ -428,6 +428,14 @@
     box-shadow:0 4px 14px rgba(0,0,0,.5);
   }
   .maplibregl-ctrl-group button{background:transparent;}
+  /* Contrôles de la carte arrondis */
+  #map .maplibregl-ctrl-group{border-radius:999px;overflow:hidden;}
+  #map .maplibregl-ctrl-group button{border-radius:0;}
+  #map .maplibregl-ctrl-group.sv-ctrl, #map .maplibregl-ctrl-group.sv-ctrl button{border-radius:50%;}
+  .search-box:not(.expanded) .search-row{border-radius:50%;}
+  .search-box.expanded .search-row{border-radius:999px;padding-right:12px;}
+  .coord-box{border-radius:999px !important;}
+  .coord-box:not(.expanded){border-radius:50% !important;}
   .maplibregl-ctrl-group button:hover{background:rgba(255,255,255,.08);}
   .maplibregl-ctrl-attrib{background:transparent !important;font-size:10px;}
   .maplibregl-ctrl-attrib a{color:var(--text-muted);}
@@ -1288,7 +1296,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.25 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.26 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -1516,7 +1524,7 @@
       var n = document.createElement('div');
       n.className = 'mini-north';
       n.title = 'Nord';
-      n.innerHTML = '<svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><text x="11" y="9" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#fff">N</text><path d="M11 11 L17 28 L11 24 L5 28 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 11 L11 24 L5 28 Z" fill="#b97a1e"/></svg>';
+      n.innerHTML = '<svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><text x="11" y="9" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="9" fill="#e5383b">N</text><path d="M11 11 L17 28 L11 24 L5 28 Z" fill="#e8a33d" stroke="#14181f" stroke-width="1"/><path d="M11 11 L11 24 L5 28 Z" fill="#b97a1e"/></svg>';
       miniMap.getContainer().appendChild(n);
       miniMap.on('rotate', function(){ n.style.transform = 'rotate(' + (-miniMap.getBearing()) + 'deg)'; });
     })();
