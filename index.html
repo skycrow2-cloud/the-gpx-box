@@ -514,6 +514,15 @@
   .in-use-host{position:relative;}
   .in-use-host.in-use::after{content:'';position:absolute;top:1px;right:1px;width:6px;height:6px;border-radius:50%;
     background:var(--accent);opacity:.85;pointer-events:none;z-index:2;}
+  /* Menu du clic droit sur la carte */
+  #mapCtxMenu{display:none;position:absolute;z-index:20;min-width:200px;padding:6px;border-radius:8px;
+    background:var(--glass-strong, rgba(27,34,44,.8));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(232,163,61,.35);box-shadow:0 6px 20px rgba(0,0,0,.5);}
+  #mapCtxMenu.open{display:block;}
+  #mapCtxMenu .ctx-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;font-size:12.5px;color:var(--text);cursor:pointer;user-select:none;}
+  #mapCtxMenu .ctx-item:hover{background:rgba(232,163,61,.15);}
+  #mapCtxMenu .ctx-item.disabled{opacity:.45;cursor:not-allowed;}
+  #mapCtxMenu input{width:15px;height:15px;accent-color:var(--accent);margin:0;cursor:inherit;}
   #sideToggle{
     position:absolute;top:50%;left:0;transform:translateY(-50%);z-index:6;
     width:22px;height:56px;padding:0;border:1px solid var(--border);border-left:none;
@@ -1202,6 +1211,10 @@
 
   <div class="body">
     <div id="map">
+      <div id="mapCtxMenu" role="menu" aria-label="Affichage des points">
+        <label class="ctx-item"><input type="checkbox" id="ctxShowPoints"> Afficher les points</label>
+        <label class="ctx-item"><input type="checkbox" id="ctxTooltips"> Infobulles sur les points</label>
+      </div>
       <div id="startInvite" role="dialog" aria-label="Point de départ">
         <button id="startInviteClose" type="button" title="Fermer" aria-label="Fermer">×</button>
         <div class="si-title"><span class="pin-ic"></span>Par où commence votre parcours ?</div>
@@ -4431,6 +4444,47 @@
   function escapeXml(s){
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+
+  // ---------- Clic droit sur la carte : afficher les points / infobulles ----------
+  (function initMapContextMenu(){
+    var menu = document.getElementById('mapCtxMenu');
+    var chkHide = document.getElementById('chkHidePoints'), chkTip = document.getElementById('chkVertexTooltip');
+    var ctxShow = document.getElementById('ctxShowPoints'), ctxTip = document.getElementById('ctxTooltips');
+    function close(){ menu.classList.remove('open'); }
+    function sync(){
+      ctxShow.checked = !chkHide.checked;
+      ctxShow.disabled = chkHide.disabled;
+      ctxShow.closest('.ctx-item').classList.toggle('disabled', chkHide.disabled);
+      ctxTip.checked = chkTip.checked;
+      ctxTip.disabled = chkTip.disabled;
+      ctxTip.closest('.ctx-item').classList.toggle('disabled', chkTip.disabled);
+    }
+    map.on('contextmenu', function(e){
+      if(e.originalEvent) e.originalEvent.preventDefault();
+      sync();
+      var host = document.getElementById('map'), w = 210, h = 80;
+      var x = Math.min(e.point.x, host.clientWidth - w - 6), y = Math.min(e.point.y, host.clientHeight - h - 6);
+      menu.style.left = Math.max(6, x) + 'px';
+      menu.style.top = Math.max(6, y) + 'px';
+      menu.classList.add('open');
+    });
+    ['click','mousedown','pointerdown','dblclick','contextmenu'].forEach(function(t){
+      menu.addEventListener(t, function(ev){ ev.stopPropagation(); if(t === 'contextmenu') ev.preventDefault(); });
+    });
+    ctxShow.addEventListener('change', function(){
+      chkHide.checked = !ctxShow.checked;
+      chkHide.dispatchEvent(new Event('change', { bubbles:true }));
+      sync();
+    });
+    ctxTip.addEventListener('change', function(){
+      chkTip.checked = ctxTip.checked;
+      chkTip.dispatchEvent(new Event('change', { bubbles:true }));
+      sync();
+    });
+    document.addEventListener('click', close);
+    document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') close(); });
+    map.on('movestart', close);
+  })();
 
   // ---------- Un seul outil ouvert à la fois ----------
   // Ouvrir un panneau / menu ferme les autres (capture : avant les gestionnaires propres à chaque bouton)
