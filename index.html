@@ -1854,8 +1854,10 @@
     map.addLayer({ id:'route-hit', type:'line', source:'route',
       layout:{ 'line-cap':'round', 'line-join':'round' },
       paint:{ 'line-color':'#000', 'line-width':22, 'line-opacity':0.001 } });
-    map.on('mouseenter', 'route-hit', function(){ if(cursorBeforePan === null && !routePickMode && !pointsHidden && points.length >= 2) map.getCanvas().style.cursor = 'ew-resize'; });
+    map.on('mouseenter', 'route-hit', function(){ if(cursorBeforePan === null && !routePickMode && !pointsHidden && points.length >= 2) map.getCanvas().style.cursor = CURSOR_RING; });
     map.on('mouseleave', 'route-hit', function(){ if(!trackScrub) updateIdleCursor(); });
+    // Curseur rond (comme dans GPX 3D) pour glisser le long de la trace
+    var CURSOR_RING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><circle cx='10' cy='10' r='7' fill='white' fill-opacity='0.9' stroke='%23e8a33d' stroke-width='3'/><circle cx='10' cy='10' r='8.6' fill='none' stroke='%23000' stroke-opacity='0.35' stroke-width='1'/></svg>\") 10 10, pointer";
     function scrubTo(lngLat){
       if(points.length < 2) return;
       showProfilePositionAtDistance(nearestDistanceOnTrack(lngLat).dist);
@@ -1865,7 +1867,7 @@
       e.preventDefault();                      // pas de déplacement de la carte pendant le glissement
       trackScrub = { moved:false };
       cursorBeforePan = null;                  // pas de main « déplacement » : on glisse sur la trace
-      map.getCanvas().style.cursor = 'ew-resize';
+      map.getCanvas().style.cursor = CURSOR_RING;
       scrubTo(e.lngLat);
     }
     function scrubMove(e){
