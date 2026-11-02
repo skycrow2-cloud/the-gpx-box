@@ -894,6 +894,12 @@
   .floatable{translate:var(--fdx, 0px) var(--fdy, 0px);}
   body.floating-on .floatable{touch-action:none;}
   body.floating-on .floatable.float-dragging, body.floating-on .floatable.float-dragging *{cursor:grabbing !important;}
+  /* Panneau itinéraire : textes, croix et flèches en jaune (sauf « Passages obligés » et le P) */
+  #routePanel select, #routePanel .btn, #routePanel #routeStatus{color:var(--accent);}
+  #routePanel #routeStartHint, #routePanel #routeEndRow > div:last-child,
+  #routePanel #routeStartLabel, #routePanel #routeEndLabel{color:var(--accent) !important;}
+  #routePanel .btn.accent{color:#1b1206;}
+  #routePanel select{accent-color:var(--accent);}
   .theme-switch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);}
   .theme-switch span{flex:1;}
   .theme-switch .btn{padding:3px 10px;font-size:11.5px;}
