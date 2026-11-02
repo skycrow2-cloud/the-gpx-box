@@ -885,6 +885,9 @@
   :root[data-theme="light"] .pitch-control, :root[data-theme="light"] #sideToggle, :root[data-theme="light"] .topo-opacity,
   :root[data-theme="light"] #mapCtxMenu{border-color:rgba(255,138,0,.5);box-shadow:0 4px 14px rgba(40,30,10,.16);}
   :root[data-theme="light"] .maplibregl-ctrl-attrib a{color:var(--text-muted);}
+  .doc-link{margin-left:auto;margin-right:8px;background:transparent;border:1px solid var(--border);color:var(--accent);border-radius:6px;
+    font-size:12px;padding:3px 9px;cursor:pointer;white-space:nowrap;}
+  .doc-link:hover{border-color:var(--accent);}
   .theme-switch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);}
   .theme-switch span{flex:1;}
   .theme-switch .btn{padding:3px 10px;font-size:11.5px;}
@@ -938,6 +941,7 @@
     <div class="doc-modal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
       <div class="doc-head">
         <h2 id="docTitle">Aide et documentation · The-GPX-Box</h2>
+        <button class="doc-link" id="btnDocLink" type="button" title="Copier le lien direct vers l'aide" aria-label="Copier le lien direct vers l'aide">🔗 Lien</button>
         <button class="doc-close" id="btnDocClose" title="Fermer (Échap)" aria-label="Fermer">×</button>
       </div>
       <div class="doc-body">
@@ -6057,14 +6061,26 @@
     ['importPanel','routePanel','osmPanel'].forEach(function(id){ document.getElementById(id).style.display = 'none'; });
     docOverlay.style.display = 'flex';
     docOverlay.querySelector('.doc-body').scrollTop = 0;
+    if(location.hash !== '#aide'){ try{ history.replaceState(null, '', location.pathname + location.search + '#aide'); }catch(e){} }
     document.getElementById('btnDocClose').focus();
   }
   function closeDoc(){
     docOverlay.style.display = 'none';
+    if(location.hash === '#aide'){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
     document.getElementById('btnDoc').focus();
   }
   document.getElementById('btnDoc').addEventListener('click', function(e){ e.stopPropagation(); if(isDocOpen()) closeDoc(); else openDoc(); });
   document.getElementById('btnDocClose').addEventListener('click', closeDoc);
+  // Lien direct vers l'aide : …/the-gpx-box/#aide
+  function docFromHash(){ if(location.hash === '#aide' && !isDocOpen()) openDoc(); }
+  window.addEventListener('hashchange', docFromHash);
+  setTimeout(docFromHash, 0);
+  document.getElementById('btnDocLink').addEventListener('click', function(){
+    var url = location.origin + location.pathname + '#aide', btn = this;
+    function done(){ btn.textContent = '✓ Lien copié'; setTimeout(function(){ btn.textContent = '🔗 Lien'; }, 1600); }
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function(){ prompt('Lien vers l\'aide :', url); });
+    else prompt('Lien vers l\'aide :', url);
+  });
   docOverlay.addEventListener('click', function(e){ if(e.target === docOverlay) closeDoc(); });
 
   document.getElementById('btnElevRetry').addEventListener('click', function(){ fetchElevations(); });
