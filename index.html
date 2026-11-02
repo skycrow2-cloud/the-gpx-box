@@ -1720,6 +1720,8 @@
   map.addControl(new maplibregl.ScaleControl({maxWidth:150, unit:'metric'}), 'bottom-left');
 
   var CURSOR_TARGET = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><g stroke='%23000' stroke-width='3' stroke-linecap='round'><line x1='11' y1='2' x2='11' y2='8'/><line x1='11' y1='14' x2='11' y2='20'/><line x1='2' y1='11' x2='8' y2='11'/><line x1='14' y1='11' x2='20' y2='11'/><circle cx='11' cy='11' r='2.4' fill='none'/></g><g stroke='white' stroke-width='1.4' stroke-linecap='round'><line x1='11' y1='2' x2='11' y2='8'/><line x1='11' y1='14' x2='11' y2='20'/><line x1='2' y1='11' x2='8' y2='11'/><line x1='14' y1='11' x2='20' y2='11'/><circle cx='11' cy='11' r='2.4' fill='none'/></g></svg>\") 11 11, crosshair";
+  // Croix orange (choix d'un départ, d'une arrivée, d'un passage, Street View)
+  var CURSOR_CROSS = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><g stroke-linecap='round'><g stroke='%2314181f' stroke-width='4'><line x1='12' y1='2' x2='12' y2='22'/><line x1='2' y1='12' x2='22' y2='12'/></g><g stroke='%23e8a33d' stroke-width='2'><line x1='12' y1='2' x2='12' y2='22'/><line x1='2' y1='12' x2='22' y2='12'/></g></g></svg>\") 12 12, crosshair";
   var CURSOR_GRAB = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14.5' fill='rgba(20,25,34,.72)' stroke='%23e8a33d' stroke-width='1.6'/><g transform='translate(8.56 8.56) scale(0.62)' fill='none' stroke='%23e8a33d' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2v20'/><path d='m15 19-3 3-3-3'/><path d='m19 9 3 3-3 3'/><path d='M2 12h20'/><path d='m5 9-3 3 3 3'/><path d='m9 5 3-3 3 3'/></g></svg>\") 16 16, move";   // pastille « déplacer » sur un point
   var CURSOR_GRABBING = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='-2 -2 28 28'><g fill='none' stroke='%2314181f' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'/><path d='M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'/><path d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/></g><g fill='none' stroke='%23e8a33d' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'><path d='M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2'/><path d='M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8'/><path d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/></g></svg>\") 11 11, grabbing";   // main orange (contour) pendant le déplacement de la carte
 
@@ -1729,7 +1731,7 @@
     updateCursorLabel();
     if(cursorBeforePan !== null && cursorBeforePan !== undefined) return;   // pendant un déplacement : la main reste
     var c = map.getCanvas();
-    if(routePickMode || (typeof svPickMode !== 'undefined' && svPickMode)){ c.style.cursor = 'crosshair'; return; }
+    if(routePickMode || (typeof svPickMode !== 'undefined' && svPickMode)){ c.style.cursor = CURSOR_CROSS; return; }
     var drawing = !pointsHidden && finishIndex === null && (manualDrawing || points.length > 0);
     c.style.cursor = drawing ? CURSOR_TARGET : 'default';
     var b = document.getElementById('btnDraw');
@@ -2328,7 +2330,7 @@
   }
   function startPicking(mode){
     routePickMode = mode;
-    map.getCanvas().style.cursor = 'crosshair';
+    map.getCanvas().style.cursor = CURSOR_CROSS;
     var isLoop = document.getElementById('routeMode').value === 'loop';
     var msg = mode === 'start'
       ? (isLoop ? 'Sélectionnez le point de départ/arrivée' : 'Sélectionnez le point de départ')
@@ -2369,7 +2371,7 @@
     if(svMapBtn) svMapBtn.classList.toggle('sv-active', svPickMode);
     if(svPickMode){
       routePickMode = null;
-      map.getCanvas().style.cursor = 'crosshair';
+      map.getCanvas().style.cursor = CURSOR_CROSS;
       showRouteBanner('Cliquez sur la carte pour ouvrir Google Street View');
     } else {
       updateIdleCursor();
