@@ -1127,7 +1127,7 @@
           <li><span class="di" data-ic="btnfit"></span><span><b>Vue générale</b> : recadre la carte sur l'ensemble du tracé (disponible dès qu'un point est placé).</span></li>
           <li><span class="di">✏️</span><span><b>Crayon</b> : active le dessin à la main (un clic = un point) ; re-cliquer termine le tracé (le dernier point devient l'arrivée) ou reprend un tracé terminé.</span></li>
           <li><span class="di">⚙️</span><span><b>Réglages</b> (engrenage) : <b>Thème</b> foncé ou clair (calqué sur GPX 3D), <b>Icônes flottantes</b> (les commandes de la carte se déplacent en les faisant glisser ; « Remettre les icônes en place » pour revenir aux positions d'origine), <b>Couleur</b> et <b>Épaisseur</b> de la trace, infobulles et « Cacher les points ». Les choix sont mémorisés.</span></li>
-          <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : onglet <b>Général</b> (OpenTopoMap, CartoWeb.be – IGN Belgique, CyclOSM) ou <b>Autres</b> (Plan IGN – France, Geoportail.lu – Luxembourg) ; superpositions Photo aérienne, Sentiers balisés (Waymarked Trails) et Relief 3D.</span></li>
+          <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : onglets <b>Général</b> (OpenTopoMap, CartoWeb.be – IGN Belgique), <b>Autres</b> (Plan IGN – France, Geoportail.lu – Luxembourg) et <b>Thème</b> (CyclOSM vélo / VTT, Sentiers balisés – Waymarked Trails) ; superpositions Photo aérienne et Relief 3D.</span></li>
           <li><span class="di">•</span><span>Un petit point orange signale l'outil ou le menu en cours d'utilisation ; ouvrir un outil ferme celui qui était ouvert.</span></li>
           <li><span class="di" data-ic="swatch"></span><span><b>Couleur</b> : choisit la couleur de la trace et des points (menu Réglages). Le choix est mémorisé.</span></li>
           <li><span class="di" data-ic="chk"></span><span><b>Photo aérienne</b> (menu Fond de carte) : passe sous le fond choisi. Un curseur translucide apparaît alors en bas de la carte : il règle l'opacité de la carte topographique superposée à la photo, de 0 % (photo seule) à 100 % (carte opaque). Il démarre à 30 %, soit 70 % de transparence ; le survol indique aussi la transparence. Décocher la photo masque le curseur et le remet à 30 %.</span></li>
@@ -1407,19 +1407,22 @@
             <div class="gpx-tabs base-tabs" role="tablist" id="baseTabs">
               <button class="gpx-tab" type="button" role="tab" id="baseTabMain" aria-controls="basePaneMain" aria-selected="true">Général</button>
               <button class="gpx-tab" type="button" role="tab" id="baseTabOther" aria-controls="basePaneOther" aria-selected="false" tabindex="-1">Autres</button>
+              <button class="gpx-tab" type="button" role="tab" id="baseTabTheme" aria-controls="basePaneTheme" aria-selected="false" tabindex="-1">Thème</button>
             </div>
             <div class="base-pane" id="basePaneMain" role="tabpanel" aria-labelledby="baseTabMain">
               <label class="toggle" title="Carte topographique mondiale (OpenStreetMap + relief)"><input type="radio" name="basemap" value="opentopo" checked> OpenTopoMap</label>
               <label class="toggle" title="Carte topographique officielle de l'IGN belge (Belgique uniquement)"><input type="radio" name="basemap" value="cartoweb"> CartoWeb.be (IGN Belgique)</label>
-              <label class="toggle" title="OpenStreetMap orienté vélo/VTT : chemins, sentiers, revêtements"><input type="radio" name="basemap" value="cyclosm"> CyclOSM (vélo / VTT)</label>
             </div>
             <div class="base-pane" id="basePaneOther" role="tabpanel" aria-labelledby="baseTabOther" hidden>
               <label class="toggle" title="Carte officielle de l'IGN France (France uniquement)"><input type="radio" name="basemap" value="ignfr"> Plan IGN (France)</label>
               <label class="toggle" title="Carte topographique officielle du Luxembourg (Luxembourg uniquement)"><input type="radio" name="basemap" value="lux"> Geoportail.lu (Luxembourg)</label>
             </div>
+            <div class="base-pane" id="basePaneTheme" role="tabpanel" aria-labelledby="baseTabTheme" hidden>
+              <label class="toggle" title="OpenStreetMap orienté vélo/VTT : chemins, sentiers, revêtements"><input type="radio" name="basemap" value="cyclosm"> CyclOSM (vélo / VTT)</label>
+              <label class="toggle" title="Itinéraires de randonnée balisés (GR, sentiers locaux)"><input type="checkbox" id="chkHikingTrails" autocomplete="off"> Sentiers balisés</label>
+            </div>
           <div class="hdr-pop-title">Superpositions</div>
             <label class="toggle"><input type="checkbox" id="chkAerial" autocomplete="off"> Photo aérienne</label>
-            <label class="toggle" title="Itinéraires de randonnée balisés (GR, sentiers locaux)"><input type="checkbox" id="chkHikingTrails" autocomplete="off"> Sentiers balisés</label>
             <label class="toggle"><input type="checkbox" id="chkTerrain"> Relief 3D</label>
         </div>
       </div>
@@ -1482,7 +1485,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.44 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.45 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -2157,8 +2160,8 @@
     if(map.getLayer('wmt-hiking-layer'))
       map.setLayoutProperty('wmt-hiking-layer', 'visibility', document.getElementById('chkHikingTrails').checked ? 'visible' : 'none');
   }
-  // Onglets « Général » / « Autres » (France, Luxembourg) : n'affichent qu'une partie des fonds
-  var BASE_TABS = [['baseTabMain', 'basePaneMain'], ['baseTabOther', 'basePaneOther']];
+  // Onglets « Général » / « Autres » / « Thème » (France, Luxembourg) : n'affichent qu'une partie des fonds
+  var BASE_TABS = [['baseTabMain', 'basePaneMain'], ['baseTabOther', 'basePaneOther'], ['baseTabTheme', 'basePaneTheme']];
   function selectBaseTab(tabId, focus){
     BASE_TABS.forEach(function(t){
       var on = t[0] === tabId, b = document.getElementById(t[0]);
@@ -2170,7 +2173,9 @@
   }
   function syncBaseTab(){
     var r = document.querySelector('input[name="basemap"]:checked');
-    selectBaseTab(r && r.closest('#basePaneOther') ? 'baseTabOther' : 'baseTabMain');
+    var pane = r && r.closest('.base-pane');
+    var t = BASE_TABS.filter(function(x){ return pane && x[1] === pane.id; })[0];
+    selectBaseTab(t ? t[0] : 'baseTabMain');
   }
   BASE_TABS.forEach(function(t){
     document.getElementById(t[0]).addEventListener('click', function(){ selectBaseTab(t[0]); });
@@ -2178,8 +2183,10 @@
   document.getElementById('baseTabs').addEventListener('keydown', function(e){
     if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
-    var cur = document.getElementById('baseTabMain').getAttribute('aria-selected') === 'true';
-    selectBaseTab(cur ? 'baseTabOther' : 'baseTabMain', true);
+    var cur = 0;
+    BASE_TABS.forEach(function(x, i){ if(document.getElementById(x[0]).getAttribute('aria-selected') === 'true') cur = i; });
+    var n = (cur + (e.key === 'ArrowRight' ? 1 : BASE_TABS.length - 1)) % BASE_TABS.length;
+    selectBaseTab(BASE_TABS[n][0], true);
   });
   document.querySelector('#menuMap > .info-btn').addEventListener('click', syncBaseTab);   // à l'ouverture : onglet du fond actif
   syncBaseTab();
