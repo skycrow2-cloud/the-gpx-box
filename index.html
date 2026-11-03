@@ -584,6 +584,21 @@
     font-weight:700;
     color:var(--accent);
   }
+  .diff-card{grid-column:1 / -1;}
+  .diff-card[hidden]{display:none;}
+  .diff-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;}
+  .diff-head .label{margin:0;}
+  .diff-act{display:flex;gap:3px;padding:2px;background:var(--panel);border:1px solid var(--border);border-radius:6px;}
+  .diff-act button{border:0;border-radius:4px;background:transparent;color:var(--text-muted);font-family:inherit;font-size:10.5px;font-weight:600;padding:2px 7px;cursor:pointer;}
+  .diff-act button[aria-checked="true"]{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(232,163,61,.45);}
+  .diff-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .diff-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:#fff;background:var(--panel);border:1px solid var(--border);cursor:help;}
+  .diff-badge.lv0{background:#2e9e55;border-color:#2e9e55;}
+  .diff-badge.lv1{background:#2f74c9;border-color:#2f74c9;}
+  .diff-badge.lv2{background:#d23b34;border-color:#d23b34;}
+  .diff-badge.lv3{background:#16181c;border-color:#8b93a1;}
+  .diff-time{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;}
+  .diff-time b{color:var(--text);font-weight:600;}
   .stat .value small{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums;font-size:10px;font-weight:500;color:var(--text-muted);}
 
   .profile-wrap{
@@ -1169,6 +1184,7 @@
           <li>Le panneau latéral donne la distance, le nombre de points, les dénivelés + et −, les altitudes min et max, et la vitesse moyenne si le fichier importé en contient. Le profil et la mini-carte s'adaptent à la taille de la fenêtre.</li>
           <li>Survoler le profil déplace le rond de suivi le long de la trace sur la carte, avec l'altitude, la pente et la distance. Clic maintenu + glisser : la carte suit le rond. Vide, le profil garde ses axes.</li>
           <li>Survoler le tracé sur la carte : le rond reste accroché à la ligne et la position s'affiche sur le profil ; clic maintenu (ou doigt) + glisser pour parcourir le tracé sans déplacer la carte.</li>
+          <li><b>Difficulté</b> (sous les statistiques) : choisir 🥾 Rando ou 🚵 VTT. Rando : Facile, Moyen, Difficile ou Très difficile selon l'effort (km + D+ / 100, méthode suisse), un niveau de plus si la pente dépasse 25 % sur 100 m ; durée selon la norme DIN 33466. VTT : vert, bleu, rouge ou noir selon la distance et le D+, un niveau de plus au-delà de 15 % ; durée sur une base de 15 km/h et 600 m de D+ par heure. Le survol du badge détaille le calcul ; le niveau est écrit dans la description du GPX exporté. C'est une estimation : la technicité du terrain n'est pas connue.</li>
           <li class="doc-note">Sur une trace très dense, les petites irrégularités du MNT peuvent gonfler légèrement le dénivelé cumulé.</li>
         </ul>
 
@@ -1446,6 +1462,15 @@
         <div class="stat"><div class="label">Altitude min</div><div class="value" id="statMin">– <small>m</small></div></div>
         <div class="stat"><div class="label">Altitude max</div><div class="value" id="statMax">– <small>m</small></div></div>
         <div class="stat" id="statSpeedCard" style="display:none;grid-column:1 / -1;"><div class="label">Vitesse moy.</div><div class="value" id="statSpeed">– <small>km/h</small></div></div>
+        <div class="stat diff-card" id="statDiffCard" hidden>
+          <div class="diff-head"><span class="label">Difficulté</span>
+            <span class="diff-act" role="radiogroup" aria-label="Activité">
+              <button type="button" role="radio" data-act="rando" aria-checked="true">🥾 Rando</button>
+              <button type="button" role="radio" data-act="vtt" aria-checked="false">🚵 VTT</button>
+            </span>
+          </div>
+          <div class="diff-row"><span class="diff-badge" id="diffBadge">–</span><span class="diff-time" id="diffTime"></span></div>
+        </div>
       </div>
 
       <div class="profile-wrap">
@@ -1485,7 +1510,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.45 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.46 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -3428,6 +3453,8 @@
   // Recalcul automatique quand l'activité change (Rando / VTT / Moto)
   var autoRecompute = false;
   document.getElementById('routeActivity').addEventListener('change', function(){
+    var dBtn = document.querySelector('.diff-act button[data-act="' + this.value + '"]');
+    if(dBtn) dBtn.click();
     var isLoop = document.getElementById('routeMode').value === 'loop';
     var btn = document.getElementById('btnRouteCompute');
     if(!routeStartPt || (!isLoop && !routeEndPt) || btn.disabled) return;
@@ -4005,6 +4032,7 @@
   function updateDistanceStat(){
     var d = totalDistance();
     document.getElementById('statDist').innerHTML = (d/1000).toFixed(2) + ' <small>km</small>';
+    updateDifficulty();
   }
 
   function updateSpeedStat(){
@@ -4018,6 +4046,95 @@
     document.getElementById('statSpeed').innerHTML = avg.toFixed(1) + ' <small>km/h</small>';
     card.style.display = 'block';
   }
+
+  // ---------- Niveau de difficulté (Rando / VTT) ----------
+  // Rando : effort en « km-effort » (méthode suisse : km + D+ / 100), un cran de plus si la pente max dépasse 25 %.
+  //         Durée : DIN 33466 (4 km/h, 300 m/h en montée, 500 m/h en descente ; max + moitié du min).
+  // VTT   : couleurs des balisages (vert, bleu, rouge, noir) selon la distance et le D+, un cran de plus au-delà de 15 % de pente.
+  //         Durée : 15 km/h sur le plat + 600 m de D+ par heure.
+  // La technicité du terrain n'est pas connue : c'est une estimation à partir de la trace.
+  var DIFF_LABELS = {
+    rando: ['Facile', 'Moyen', 'Difficile', 'Très difficile'],
+    vtt:   ['Vert · très facile', 'Bleu · facile', 'Rouge · difficile', 'Noir · très difficile']
+  };
+  var diffAct = 'rando';
+  try{ if(localStorage.getItem('gpxbox.diffAct') === 'vtt') diffAct = 'vtt'; }catch(e){}
+  var lastDifficulty = null;
+
+  function maxSlopeOver(win){   // pente max (valeur absolue, %) mesurée sur au moins « win » mètres
+    var cum = [0], best = 0;
+    for(var i=1;i<points.length;i++) cum.push(cum[i-1] + haversine(points[i-1], points[i]));
+    var j = 0;
+    for(var k=0;k<points.length;k++){
+      if(typeof points[k].ele !== 'number') continue;
+      if(j < k) j = k;
+      while(j < points.length-1 && cum[j] - cum[k] < win) j++;
+      var d = cum[j] - cum[k];
+      if(d >= win && typeof points[j].ele === 'number') best = Math.max(best, Math.abs(points[j].ele - points[k].ele) / d * 100);
+    }
+    return best;
+  }
+
+  function fmtDuration(h){
+    var m = Math.round(h * 60 / 5) * 5;
+    if(m < 60) return m + ' min';
+    return Math.floor(m/60) + ' h ' + String(m % 60).padStart(2, '0');
+  }
+
+  function computeDifficulty(act){
+    if(points.length < 2) return null;
+    var km = totalDistance() / 1000, up = 0, down = 0, eleCount = 0;
+    for(var i=0;i<points.length;i++) if(typeof points[i].ele === 'number') eleCount++;
+    for(var i=0;i<points.length-1;i++){
+      var e1 = points[i].ele, e2 = points[i+1].ele;
+      if(typeof e1 === 'number' && typeof e2 === 'number'){ var d = e2 - e1; if(d > 0) up += d; else down -= d; }
+    }
+    var slope = maxSlopeOver(100), lv, h, effort = null;
+    if(act === 'vtt'){
+      var byDist = km < 20 ? 0 : km < 35 ? 1 : km < 50 ? 2 : 3;
+      var byUp   = up < 300 ? 0 : up < 700 ? 1 : up < 1200 ? 2 : 3;
+      lv = Math.max(byDist, byUp);
+      if(slope > 15) lv++;
+      h = km / 15 + up / 600;
+    } else {
+      effort = km + up / 100;
+      lv = effort < 10 ? 0 : effort < 18 ? 1 : effort < 28 ? 2 : 3;
+      if(slope > 25) lv++;
+      var hz = km / 4, vt = up / 300 + down / 500;
+      h = Math.max(hz, vt) + Math.min(hz, vt) / 2;
+    }
+    lv = Math.min(lv, 3);
+    return { act:act, level:lv, label:DIFF_LABELS[act][lv], hours:h, km:km, up:up, slope:slope, effort:effort,
+             partial: eleCount < points.length };
+  }
+
+  function updateDifficulty(){
+    var card = document.getElementById('statDiffCard');
+    var r = computeDifficulty(diffAct);
+    lastDifficulty = r;
+    card.hidden = !r;
+    if(!r) return;
+    var badge = document.getElementById('diffBadge');
+    badge.className = 'diff-badge lv' + r.level;
+    badge.textContent = r.label;
+    badge.title = (r.act === 'vtt' ? 'VTT' : 'Randonnée') + ' : ' + r.km.toFixed(1) + ' km, D+ ' + Math.round(r.up) + ' m' +
+      (r.effort !== null ? ', effort ' + r.effort.toFixed(1) + ' km-effort' : '') +
+      ', pente max ' + Math.round(r.slope) + ' % (sur 100 m).' +
+      (r.slope > (r.act === 'vtt' ? 15 : 25) ? ' Pente forte : un niveau de plus.' : '') +
+      ' Estimation à partir de la trace : la technicité du terrain n\'est pas prise en compte.' +
+      (r.partial ? ' Altitudes en cours de chargement.' : '');
+    document.getElementById('diffTime').innerHTML = 'Durée estimée <b>' + fmtDuration(r.hours) + '</b>';
+  }
+
+  document.querySelectorAll('.diff-act button').forEach(function(b){
+    b.setAttribute('aria-checked', b.getAttribute('data-act') === diffAct ? 'true' : 'false');
+    b.addEventListener('click', function(){
+      diffAct = b.getAttribute('data-act');
+      try{ localStorage.setItem('gpxbox.diffAct', diffAct); }catch(e){}
+      document.querySelectorAll('.diff-act button').forEach(function(x){ x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
+      updateDifficulty();
+    });
+  });
 
   // ---------- Météo (Open-Meteo) ----------
   document.getElementById('weatherBar').addEventListener('click', function(){
@@ -4265,6 +4382,7 @@
       document.getElementById('statMin').innerHTML = '– <small>m</small>';
       document.getElementById('statMax').innerHTML = '– <small>m</small>';
     }
+    updateDifficulty();
   }
 
   // ---------- Profil altimétrique (SVG) ----------
@@ -4672,6 +4790,7 @@
       '  <metadata><time>'+now+'</time></metadata>\n' +
       '  <trk>\n' +
       '    <name>'+escapeXml(trackName)+'</name>\n' +
+      (lastDifficulty ? '    <desc>'+escapeXml('Difficulté ' + (lastDifficulty.act === 'vtt' ? 'VTT' : 'rando') + ' : ' + lastDifficulty.label + ' · durée estimée ' + fmtDuration(lastDifficulty.hours))+'</desc>\n' : '') +
       '    <trkseg>\n' +
       '      '+trkpts+'\n' +
       '    </trkseg>\n' +
