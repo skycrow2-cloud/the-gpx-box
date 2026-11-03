@@ -942,13 +942,10 @@
   .ht-lbl{display:none;}
   #btnHdrTools{display:none;}
   @media (max-height:500px) and (orientation:landscape){
-    /* bandeau supprimé : seuls la météo et le bouton ☰ restent, posés en haut à droite de la carte */
-    header, :root[data-theme="light"] header{position:fixed;top:0;right:0;padding:8px;background:none;border:none;box-shadow:none;
-      -webkit-backdrop-filter:none;backdrop-filter:none;z-index:2500;pointer-events:none;}
-    header > img, header h1, .header-right .toolbar-right{display:none !important;}
-    .header-right{position:relative;flex-wrap:nowrap;margin-left:0;pointer-events:auto;}
-    #weatherBar{background:var(--glass-strong, var(--panel));border:1px solid var(--border);border-radius:17px;height:34px;padding:0 7px;}
-    #btnHdrTools{display:flex;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+    /* bouton ☰ toujours sur la même ligne que le titre, collé à droite (même sous 760 px de large) */
+    header{flex-wrap:nowrap !important;}
+    .header-right{position:relative;flex:0 0 auto !important;width:auto !important;margin-left:auto !important;flex-wrap:nowrap;justify-content:flex-end;}
+    #btnHdrTools{display:flex;}
     #btnHdrTools[aria-expanded="true"]{background:var(--accent);color:#1b1206;box-shadow:0 0 0 3px var(--accent-soft);}
     .hdr-tools{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:3000;
       grid-template-columns:repeat(2, minmax(150px, auto));gap:6px;padding:8px;
@@ -1451,7 +1448,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.41 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.42 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
