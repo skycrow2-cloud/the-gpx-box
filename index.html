@@ -914,7 +914,14 @@
   #weatherBar{min-width:0;}
   #weatherText{overflow:hidden;text-overflow:ellipsis;}
   @media (max-width:1100px){ #weatherPlace{display:none !important;} }
-  @media (max-width:900px) and (orientation:portrait){ #weatherBar{display:none !important;} }
+  /* GSM (toutes orientations) et tablette en portrait : météo réduite à son icône (détail au survol / appui) */
+  @media (max-width:900px) and (orientation:portrait), (max-height:500px) and (orientation:landscape){
+    #weatherText, #weatherPlace{display:none !important;}
+    #weatherBar{gap:0;cursor:help;}
+    #weatherIcon{font-size:20px !important;}
+    #weatherBar.wx-open{gap:6px;}
+    #weatherBar.wx-open #weatherText{display:inline !important;}
+  }
   @media (max-width:760px){
     header{padding:6px 10px;}
     .header-right{flex:1 1 100%;width:100%;margin-left:0;justify-content:center;gap:6px;}
@@ -1413,7 +1420,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.38 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.39 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -3898,6 +3905,10 @@
   }
 
   // ---------- Météo (Open-Meteo) ----------
+  document.getElementById('weatherBar').addEventListener('click', function(){
+    // en mode icône (GSM / tablette portrait) : un appui affiche ou masque le détail
+    if(getComputedStyle(document.getElementById('weatherText')).display === 'none' || this.classList.contains('wx-open')) this.classList.toggle('wx-open');
+  });
   var weatherTimer = null;
   var lastWeatherKey = null;
   var userLocation = null;
@@ -3974,6 +3985,7 @@
       document.getElementById('weatherIcon').textContent = info[0];
       document.getElementById('weatherText').textContent =
         Math.round(c.temperature_2m)+'°C · '+info[1]+' · vent '+Math.round(c.wind_speed_10m)+' km/h';
+      document.getElementById('weatherIcon').title = document.getElementById('weatherText').textContent;
       updateWeatherBarVisibility();
     }).catch(function(){
       document.getElementById('weatherText').textContent = '';
