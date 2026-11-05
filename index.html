@@ -989,6 +989,16 @@
     .hdr-tools .hdr-menu{width:100%;position:static;}
     .hdr-tools #menuSettings > .hdr-pop, .hdr-tools #menuExport > .hdr-pop{left:auto;right:calc(100% + 8px);top:0;max-height:calc(100vh - 70px);max-height:calc(100dvh - 70px);overflow-y:auto;}
   }
+  /* ------------------------------------------------ GSM en paysage : barre d'assiette en haut à gauche, sous la loupe */
+  @media (max-height:500px) and (orientation:landscape){
+    .search-box{z-index:7;}   /* les résultats de recherche passent au-dessus de la barre */
+    .pitch-control{top:62px;left:17px;right:auto;bottom:auto;height:90px;}
+    .pitch-control input[type=range]{width:76px;}
+    #pitchTooltip{top:107px;left:57px;right:auto;bottom:auto;transform:translateY(-50%);}
+  }
+  @media (max-height:500px) and (orientation:landscape) and (min-width:761px){
+    #sideToggle{top:max(50%, 188px);}   /* la languette du panneau latéral ne chevauche pas la barre */
+  }
 </style>
 </head>
 <body>
@@ -1510,7 +1520,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.46 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.47 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
