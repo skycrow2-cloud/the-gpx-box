@@ -998,6 +998,27 @@
   }
   @media (max-height:500px) and (orientation:landscape) and (min-width:761px){
     #sideToggle{top:max(50%, 188px);}   /* la languette du panneau latéral ne chevauche pas la barre */
+    /* panneau latéral : défile pour atteindre le profil et la mini-carte */
+    .side{overflow-y:auto;overscroll-behavior:contain;}
+    .profile-wrap{flex:none;height:200px;}
+    .mini-wrap{flex:none;height:190px;}
+  }
+  /* ------------------------------------------------ GSM (panneau en bas) : la page défile jusqu'au panneau, profil et mini-carte à hauteur fixe */
+  @media (max-width:760px){
+    .app{height:auto;min-height:var(--app-h, 100dvh);}
+    .app:has(.body.side-collapsed){height:var(--app-h, 100dvh);}   /* panneau masqué : la carte occupe tout l'écran */
+    .body:not(.side-collapsed){flex:none;}
+    #map{height:60vh;height:60svh;}
+    .side{flex:none;overflow:visible;width:auto !important;max-width:none !important;}
+    .profile-wrap{flex:none;height:210px;}
+    .mini-wrap{flex:none;height:200px;}
+  }
+  @media (max-width:760px) and (orientation:landscape){
+    /* la carte remplit l'écran ; le haut du panneau dépasse pour inviter à faire défiler */
+    #map{min-height:160px;height:calc(100vh - var(--hdr-h, 53px) - 40px);height:calc(100svh - var(--hdr-h, 53px) - 40px);}
+    .stats{grid-template-columns:repeat(6, 1fr);}
+    #sideToggle{left:10px;transform:none;}                  /* flèche du panneau du bas : à gauche */
+    #map .maplibregl-ctrl-bottom-left{left:62px;}           /* l'échelle se range à droite de la flèche */
   }
 </style>
 </head>
@@ -1520,7 +1541,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.47 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.48 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -5224,11 +5245,18 @@
   })();
 
   // ---------- Hauteur visible réelle (Safari iPad/iPhone) ----------
+  // GSM, panneau en bas et ouvert : la page défile pour l'atteindre
+  function pageScrolls(){
+    var b = document.querySelector('.body');
+    return window.matchMedia('(max-width:760px)').matches && !(b && b.classList.contains('side-collapsed'));
+  }
   (function fitAppHeight(){
     function apply(){
       var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
       document.documentElement.style.setProperty('--app-h', Math.round(h) + 'px');
-      window.scrollTo(0, 0);
+      var hd = document.querySelector('header');
+      if(hd) document.documentElement.style.setProperty('--hdr-h', hd.offsetHeight + 'px');
+      if(!pageScrolls()) window.scrollTo(0, 0);
       if(typeof map !== 'undefined' && map && map.resize) map.resize();
     }
     apply();
@@ -5249,6 +5277,9 @@
       setTimeout(function(){
         window.dispatchEvent(new Event('resize'));
         if(!collapsed && typeof drawProfile === 'function') drawProfile();
+        // GSM en paysage : ouvrir le panneau du bas l'amène à l'écran
+        if(save && !collapsed && window.matchMedia('(max-width:760px) and (orientation:landscape)').matches)
+          document.querySelector('.side').scrollIntoView({ behavior:'smooth', block:'start' });
       }, 30);
     }
     var saved = null; try{ saved = localStorage.getItem(KEY); }catch(e){}
@@ -5311,6 +5342,7 @@
 
     window.addEventListener('resize', function(){
       if(document.querySelector('.body').classList.contains('side-collapsed')) return;
+      if(window.matchMedia('(max-width:760px)').matches){ if(map && map.resize) map.resize(); return; }   // panneau en bas : pleine largeur
       var w = side.getBoundingClientRect().width;
       var clamped = Math.max(MIN_W, Math.min(maxW(), w));
       if(clamped !== w){
