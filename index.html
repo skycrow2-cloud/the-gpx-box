@@ -1039,6 +1039,18 @@
   #drawTouchBar button:disabled{opacity:.4;}
   #drawTouchBar #dtbFinish{background:var(--accent);border-color:var(--accent);color:#1b1206;}
   #drawTouchBar.show{display:flex;}
+  #drawTouchBar{translate:var(--dbx, 0px) var(--dby, 0px);align-items:center;}
+  #dtbGrip{display:none;}
+  /* PC (souris) : barre compacte, icônes seules, déplaçable par sa poignée (position mémorisée) */
+  @media (pointer:fine){
+    #drawTouchBar{gap:4px;padding:3px 4px 3px 2px;bottom:28px;}
+    #drawTouchBar button{height:28px;min-width:28px;padding:0 6px;}
+    #drawTouchBar button svg{width:16px;height:16px;}
+    #drawTouchBar .dtb-lbl{display:none;}
+    #dtbGrip{display:flex;align-items:center;justify-content:center;width:14px;height:28px;color:var(--text-muted);cursor:grab;touch-action:none;}
+    #dtbGrip:hover{color:var(--accent);}
+    #drawTouchBar.dragging, #drawTouchBar.dragging #dtbGrip{cursor:grabbing;}
+  }
 </style>
 </head>
 <body>
@@ -1179,7 +1191,7 @@
         <ul class="doc-icons">
           <li><span class="di" data-ic="vertex"></span><span><b>Créer un point</b> : activez le crayon (en haut à droite), puis cliquez sur la carte. Les points sont numérotés dans l'ordre. Re-cliquer sur le crayon termine (ou reprend) le tracé.</span></li>
           <li><span class="di" data-ic="start"></span><span><b>Départ</b> : le premier point est marqué d'un drapeau vert.</span></li>
-          <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : le bouton <b>✓ Terminer</b> (en bas au centre de la carte pendant le tracé), <kbd>Entrée</kbd> ou un double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge). Le bouton <b>↶</b> à côté annule le dernier point posé. Sur GSM et tablette, ces boutons remplacent le double-clic et les touches.</span></li>
+          <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : le bouton <b>✓ Terminer</b> (en bas au centre de la carte pendant le tracé), <kbd>Entrée</kbd> ou un double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge). Le bouton <b>↶</b> à côté annule le dernier point posé. Sur PC, la barre se déplace par sa poignée ⋮⋮ (double-clic sur la poignée : position d'origine) ; sur GSM et tablette, ces boutons remplacent le double-clic et les touches.</span></li>
           <li><span class="di" data-ic="loopflag"></span><span><b>Boucle</b> : départ et arrivée confondus sont signalés par un drapeau à damier blanc.</span></li>
           <li><span class="di"><span class="backtrack-mk" style="width:20px;height:20px;font-size:13px;animation:none;">!</span></span><span><b>Aller-retour</b> : quand le tracé repasse en sens inverse sur la même route ou le même chemin, même sur quelques dizaines de mètres, le tronçon est souligné en jaune pointillé et signalé par un <b>!</b> rouge (survoler pour la longueur).</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Déplacer un point</b> : clic gauche maintenu sur le point, puis glisser.</span></li>
@@ -4706,10 +4718,12 @@
     var bar = document.createElement('div');
     bar.id = 'drawTouchBar';
     bar.innerHTML =
+      '<span id="dtbGrip" title="Glisser pour déplacer (double-clic : position d\'origine)">' +
+        '<svg width="8" height="16" viewBox="0 0 8 16" fill="currentColor"><circle cx="2" cy="3" r="1.3"/><circle cx="6" cy="3" r="1.3"/><circle cx="2" cy="8" r="1.3"/><circle cx="6" cy="8" r="1.3"/><circle cx="2" cy="13" r="1.3"/><circle cx="6" cy="13" r="1.3"/></svg></span>' +
       '<button type="button" id="dtbUndo" title="Annuler le dernier point" aria-label="Annuler le dernier point">' +
         '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>' +
       '<button type="button" id="dtbFinish" title="Terminer le tracé (le dernier point devient l\'arrivée)" aria-label="Terminer le tracé">' +
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Terminer</button>';
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span class="dtb-lbl">Terminer</span></button>';
     ['click','dblclick','mousedown','pointerdown','touchstart','contextmenu'].forEach(function(t){
       bar.addEventListener(t, function(ev){ ev.stopPropagation(); });
     });
@@ -4722,12 +4736,53 @@
       markFinish();
       updateIdleCursor();
     });
+    // Déplacement par la poignée (PC), dans les limites de la carte ; position mémorisée
+    var KEY = 'gpxbox.drawBarPos', pos = { dx:0, dy:0 };
+    try{ var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if(sv){ pos.dx = +sv.dx || 0; pos.dy = +sv.dy || 0; } }catch(e){}
+    function setPos(){ bar.style.setProperty('--dbx', pos.dx + 'px'); bar.style.setProperty('--dby', pos.dy + 'px'); }
+    function clampPos(){
+      var r = bar.getBoundingClientRect(), a = map.getContainer().getBoundingClientRect(), M = 4;
+      if(!r.width) return;
+      var bl = r.left - pos.dx, bt = r.top - pos.dy;
+      pos.dx = Math.round(Math.max(a.left + M - bl, Math.min(pos.dx, a.right - M - r.width - bl)));
+      pos.dy = Math.round(Math.max(a.top + M - bt, Math.min(pos.dy, a.bottom - M - r.height - bt)));
+      setPos();
+    }
+    bar.clampPos = clampPos;
+    setPos();
+    var grip = bar.querySelector('#dtbGrip'), drag = null;
+    grip.addEventListener('pointerdown', function(ev){
+      if(ev.button !== 0) return;
+      ev.preventDefault();
+      drag = { x:ev.clientX, y:ev.clientY, dx:pos.dx, dy:pos.dy, id:ev.pointerId };
+      try{ grip.setPointerCapture(ev.pointerId); }catch(e){}
+      bar.classList.add('dragging');
+    });
+    grip.addEventListener('pointermove', function(ev){
+      if(!drag || ev.pointerId !== drag.id) return;
+      pos.dx = drag.dx + ev.clientX - drag.x; pos.dy = drag.dy + ev.clientY - drag.y;
+      clampPos();
+    });
+    function endDrag(ev){
+      if(!drag || ev.pointerId !== drag.id) return;
+      drag = null; bar.classList.remove('dragging');
+      try{ localStorage.setItem(KEY, JSON.stringify(pos)); }catch(e){}
+    }
+    grip.addEventListener('pointerup', endDrag);
+    grip.addEventListener('pointercancel', endDrag);
+    grip.addEventListener('dblclick', function(){
+      pos = { dx:0, dy:0 }; setPos();
+      try{ localStorage.removeItem(KEY); }catch(e){}
+    });
+    window.addEventListener('resize', function(){ if(bar.classList.contains('show')) clampPos(); });
     return bar;
   })();
   function updateDrawTouchBar(){
     if(!drawTouchBar) return;
     var on = isDrawingActive() && !routePickMode;
+    var was = drawTouchBar.classList.contains('show');
     drawTouchBar.classList.toggle('show', on);
+    if(on && !was) drawTouchBar.clampPos();   // reste dans la carte si la fenêtre a changé de taille
     drawTouchBar.querySelector('#dtbUndo').disabled = points.length === 0;
     drawTouchBar.querySelector('#dtbFinish').disabled = points.length < 2;
   }
