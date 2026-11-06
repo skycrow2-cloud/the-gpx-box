@@ -1020,6 +1020,25 @@
     #sideToggle{left:10px;transform:none;}                  /* flèche du panneau du bas : à gauche */
     #map .maplibregl-ctrl-bottom-left{left:62px;}           /* l'échelle se range à droite de la flèche */
   }
+  /* ------------------------------------------------ GSM : croix de fermeture des fenêtres d'outils */
+  .tool-close{display:none;}
+  @media (max-width:760px), (max-height:500px) and (orientation:landscape){
+    .tool-close{display:flex;align-items:center;justify-content:center;position:absolute;top:8px;right:8px;z-index:2;
+      width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--border);background:var(--panel-2);
+      color:var(--accent);font-size:20px;line-height:1;cursor:pointer;}
+    .tool-close:active{background:var(--border);}
+    .has-tool-close > :nth-child(2){margin-right:34px;}   /* le titre ne passe pas sous la croix */
+  }
+  /* ------------------------------------------------ Écrans tactiles (GSM, tablette) : barre « annuler / terminer » pendant le tracé à la main */
+  #drawTouchBar{display:none;position:absolute;left:50%;bottom:36px;transform:translateX(-50%);z-index:6;gap:8px;padding:6px;
+    background:var(--win-bg);-webkit-backdrop-filter:var(--win-blur);backdrop-filter:var(--win-blur);
+    border:1px solid var(--border);border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  #drawTouchBar button{display:flex;align-items:center;justify-content:center;gap:6px;height:42px;min-width:42px;padding:0 12px;
+    border-radius:999px;border:1px solid var(--border);background:var(--panel-2);color:var(--accent);
+    font:600 14px 'Inter',sans-serif;cursor:pointer;touch-action:manipulation;}
+  #drawTouchBar button:disabled{opacity:.4;}
+  #drawTouchBar #dtbFinish{background:var(--accent);border-color:var(--accent);color:#1b1206;}
+  @media (pointer:coarse){ #drawTouchBar.show{display:flex;} }
 </style>
 </head>
 <body>
@@ -1891,6 +1910,7 @@
   // Curseur : flèche au repos ; cible pendant la création d'un tracé ; croix pendant un choix sur la carte
   var manualDrawing = false;
   function updateIdleCursor(){
+    if(typeof updateDrawTouchBar === 'function') updateDrawTouchBar();
     updateCursorLabel();
     if(cursorBeforePan !== null && cursorBeforePan !== undefined) return;   // pendant un déplacement : la main reste
     var c = map.getCanvas();
@@ -4675,6 +4695,36 @@
     manualDrawing = false;
     rebuildMarkers();
   });
+  // Écrans tactiles : pas de double-clic ni de touches Entrée / Échap → boutons « Annuler le dernier point » et « Terminer »
+  var drawTouchBar = (function(){
+    var bar = document.createElement('div');
+    bar.id = 'drawTouchBar';
+    bar.innerHTML =
+      '<button type="button" id="dtbUndo" title="Annuler le dernier point" aria-label="Annuler le dernier point">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>' +
+      '<button type="button" id="dtbFinish" title="Terminer le tracé (le dernier point devient l\'arrivée)" aria-label="Terminer le tracé">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Terminer</button>';
+    ['click','dblclick','mousedown','pointerdown','touchstart','contextmenu'].forEach(function(t){
+      bar.addEventListener(t, function(ev){ ev.stopPropagation(); });
+    });
+    map.getContainer().appendChild(bar);
+    bar.querySelector('#dtbUndo').addEventListener('click', function(){
+      if(points.length > 0) removeVertex(points.length - 1);
+      updateIdleCursor();
+    });
+    bar.querySelector('#dtbFinish').addEventListener('click', function(){
+      markFinish();
+      updateIdleCursor();
+    });
+    return bar;
+  })();
+  function updateDrawTouchBar(){
+    if(!drawTouchBar) return;
+    var on = isDrawingActive() && !routePickMode;
+    drawTouchBar.classList.toggle('show', on);
+    drawTouchBar.querySelector('#dtbUndo').disabled = points.length === 0;
+    drawTouchBar.querySelector('#dtbFinish').disabled = points.length < 2;
+  }
   document.getElementById('btnDraw').addEventListener('click', function(ev){
     ev.stopPropagation();
     hideStartInvite();
@@ -5153,6 +5203,18 @@
       }
       if(t.menu){ var m = document.getElementById(t.menu); if(m) m.classList.remove('open'); }
     }
+    // GSM : croix de fermeture dans chaque fenêtre d'outil (masquée sur ordinateur et tablette par le CSS)
+    TOOLS.forEach(function(t){
+      var win = t.panel ? document.getElementById(t.panel)
+              : (t.menu ? document.querySelector('#' + t.menu + ' > .hdr-pop') : null);
+      if(!win) return;
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'tool-close'; x.textContent = '×';
+      x.title = 'Fermer'; x.setAttribute('aria-label', 'Fermer');
+      x.addEventListener('click', function(ev){ ev.stopPropagation(); closeTool(t); });
+      win.insertBefore(x, win.firstChild);
+      win.classList.add('has-tool-close');
+    });
     document.addEventListener('click', function(ev){
       var own = null;
       TOOLS.forEach(function(t){ if(ev.target.closest(t.btn)) own = t; });
