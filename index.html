@@ -2540,10 +2540,25 @@
   function hideRouteBanner(){
     document.getElementById('routePickBanner').style.display = 'none';
   }
+  // Annule une sélection d'arrivée en cours (passage en mode boucle)
+  function cancelEndPicking(){
+    if(routePickMode === 'end'){
+      routePickMode = null;
+      updateIdleCursor();
+      updateCursorLabel();
+    }
+    document.getElementById('routeStatus').textContent = '';
+    hideRouteBanner();
+  }
   function startPicking(mode){
+    var isLoop = document.getElementById('routeMode').value === 'loop';
+    // Boucle : l'arrivée est le départ, on ne la demande jamais
+    if(mode === 'end' && isLoop){
+      if(!routeStartPt){ mode = 'start'; }
+      else { cancelEndPicking(); return; }
+    }
     routePickMode = mode;
     map.getCanvas().style.cursor = CURSOR_CROSS;
-    var isLoop = document.getElementById('routeMode').value === 'loop';
     var msg = mode === 'start'
       ? (isLoop ? 'Sélectionnez le point de départ/arrivée' : 'Sélectionnez le point de départ')
       : (mode === 'via' ? 'Cliquez le point de passage obligé n°' + (routeViaPts.length+1)
@@ -2689,6 +2704,9 @@
     var startBtn = document.getElementById('btnRoutePickStart');
     startBtn.title = isLoop ? 'Sélectionner le point de départ/arrivée' : 'Sélectionner le point de départ';
     document.getElementById('routeStartHint').textContent = isLoop ? 'Sélectionner le point de départ/arrivée' : 'Sélectionner le point de départ';
+    // Passage en boucle pendant qu'on attendait l'arrivée : on ne la demande plus
+    if(isLoop && routePickMode === 'end') startPicking('end');
+    else if(isLoop && routePickMode === 'start') startPicking('start');   // libellé « départ/arrivée »
   });
   var endBtnClicked = false;
   function updateRoutePanelUI(){
