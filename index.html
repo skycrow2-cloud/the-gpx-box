@@ -1041,15 +1041,19 @@
   #drawTouchBar.show{display:flex;}
   #drawTouchBar{translate:var(--dbx, 0px) var(--dby, 0px);align-items:center;}
   #dtbGrip{display:none;}
-  /* PC (souris) : barre compacte, icônes seules, déplaçable par sa poignée (position mémorisée) */
-  @media (pointer:fine){
-    #drawTouchBar{gap:4px;padding:3px 4px 3px 2px;bottom:28px;}
-    #drawTouchBar button{height:28px;min-width:28px;padding:0 6px;}
-    #drawTouchBar button svg{width:16px;height:16px;}
-    #drawTouchBar .dtb-lbl{display:none;}
-    #dtbGrip{display:flex;align-items:center;justify-content:center;width:14px;height:28px;color:var(--text-muted);cursor:grab;touch-action:none;}
-    #dtbGrip:hover{color:var(--accent);}
-    #drawTouchBar.dragging, #drawTouchBar.dragging #dtbGrip{cursor:grabbing;}
+  /* Barre compacte, icônes seules, déplaçable par sa poignée (position mémorisée) — PC, tablette et GSM */
+  #drawTouchBar{gap:4px;padding:3px 4px 3px 2px;bottom:28px;}
+  #drawTouchBar button{height:28px;min-width:28px;padding:0 6px;}
+  #drawTouchBar button svg{width:16px;height:16px;}
+  #drawTouchBar .dtb-lbl{display:none;}
+  #drawTouchBar #dtbGrip{display:flex;align-items:center;justify-content:center;width:14px;height:28px;color:var(--text-muted);cursor:grab;touch-action:none;}
+  #dtbGrip:hover{color:var(--accent);}
+  #drawTouchBar.dragging, #drawTouchBar.dragging #dtbGrip{cursor:grabbing;}
+  /* tactile : un peu plus grand pour le doigt */
+  @media (pointer:coarse){
+    #drawTouchBar button{height:34px;min-width:34px;}
+    #drawTouchBar button svg{width:18px;height:18px;}
+    #drawTouchBar #dtbGrip{width:20px;height:34px;}
   }
 </style>
 </head>
@@ -1191,7 +1195,7 @@
         <ul class="doc-icons">
           <li><span class="di" data-ic="vertex"></span><span><b>Créer un point</b> : activez le crayon (en haut à droite), puis cliquez sur la carte. Les points sont numérotés dans l'ordre. Re-cliquer sur le crayon termine (ou reprend) le tracé.</span></li>
           <li><span class="di" data-ic="start"></span><span><b>Départ</b> : le premier point est marqué d'un drapeau vert.</span></li>
-          <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : le bouton <b>✓ Terminer</b> (en bas au centre de la carte pendant le tracé), <kbd>Entrée</kbd> ou un double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge). Le bouton <b>↶</b> à côté annule le dernier point posé. Sur PC, la barre se déplace par sa poignée ⋮⋮ (double-clic sur la poignée : position d'origine) ; sur GSM et tablette, ces boutons remplacent le double-clic et les touches.</span></li>
+          <li><span class="di" data-ic="finish"></span><span><b>Arrivée</b> : le bouton <b>✓ Terminer</b> (en bas au centre de la carte pendant le tracé), <kbd>Entrée</kbd> ou un double-clic sur la carte marque le dernier point comme arrivée (drapeau à damier rouge). Le bouton <b>↶</b> à côté annule le dernier point posé. La barre se déplace en glissant sa poignée ⋮⋮ (double-clic sur la poignée : position d'origine). Sur GSM et tablette, ces boutons remplacent le double-clic et les touches.</span></li>
           <li><span class="di" data-ic="loopflag"></span><span><b>Boucle</b> : départ et arrivée confondus sont signalés par un drapeau à damier blanc.</span></li>
           <li><span class="di"><span class="backtrack-mk" style="width:20px;height:20px;font-size:13px;animation:none;">!</span></span><span><b>Aller-retour</b> : quand le tracé repasse en sens inverse sur la même route ou le même chemin, même sur quelques dizaines de mètres, le tronçon est souligné en jaune pointillé et signalé par un <b>!</b> rouge (survoler pour la longueur).</span></li>
           <li><span class="di" data-ic="vertex"></span><span><b>Déplacer un point</b> : clic gauche maintenu sur le point, puis glisser.</span></li>
