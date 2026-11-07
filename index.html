@@ -1238,7 +1238,7 @@
           <li><span class="di" data-ic="btnfit"></span><span><b>Vue générale</b> : recadre la carte sur l'ensemble du tracé (disponible dès qu'un point est placé).</span></li>
           <li><span class="di">✏️</span><span><b>Crayon</b> : active le dessin à la main (un clic = un point) ; re-cliquer termine le tracé (le dernier point devient l'arrivée) ou reprend un tracé terminé.</span></li>
           <li><span class="di">⚙️</span><span><b>Réglages</b> (engrenage) : <b>Thème</b> foncé ou clair (calqué sur GPX 3D), <b>Icônes flottantes</b> (les commandes de la carte se déplacent en les faisant glisser ; « Remettre les icônes en place » pour revenir aux positions d'origine), <b>Couleur</b> et <b>Épaisseur</b> de la trace, infobulles et « Cacher les points ». Les choix sont mémorisés.</span></li>
-          <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : onglets <b>Général</b> (OpenTopoMap, CartoWeb.be – IGN Belgique), <b>Autres</b> (Plan IGN – France, Geoportail.lu – Luxembourg) et <b>Thème</b> (CyclOSM vélo / VTT, Sentiers balisés – Waymarked Trails) ; superpositions Photo aérienne et Relief 3D.</span></li>
+          <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : onglets <b>Général</b> (OpenTopoMap, CartoWeb.be – IGN Belgique), <b>Autres</b> (Plan IGN – France, Geoportail.lu – Luxembourg) et <b>Thème</b> (CyclOSM vélo / VTT, Sentiers balisés – Waymarked Trails, Chasse – SPW Wallonie avec choix de la date) ; superpositions Photo aérienne et Relief 3D.</span></li>
           <li><span class="di">•</span><span>Un petit point orange signale l'outil ou le menu en cours d'utilisation ; ouvrir un outil ferme celui qui était ouvert.</span></li>
           <li><span class="di" data-ic="swatch"></span><span><b>Couleur</b> : choisit la couleur de la trace et des points (menu Réglages). Le choix est mémorisé.</span></li>
           <li><span class="di" data-ic="chk"></span><span><b>Photo aérienne</b> (menu Fond de carte) : passe sous le fond choisi. Un curseur translucide apparaît alors en bas de la carte : il règle l'opacité de la carte topographique superposée à la photo, de 0 % (photo seule) à 100 % (carte opaque). Il démarre à 30 %, soit 70 % de transparence ; le survol indique aussi la transparence. Décocher la photo masque le curseur et le remet à 30 %.</span></li>
@@ -1308,7 +1308,7 @@
         </ul>
 
         <h3>Sources des données</h3>
-        <p class="doc-note">Fonds © OpenTopoMap (CC-BY-SA), IGN Belgique – CartoWeb.be, IGN France – Plan IGN, ACT – geoportail.lu, CyclOSM / OpenStreetMap · Sentiers balisés © Waymarked Trails · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS et itinéraires balisés importés © contributeurs OpenStreetMap (ODbL), via openstreetmap.org et l'API Overpass.</p>
+        <p class="doc-note">Fonds © OpenTopoMap (CC-BY-SA), IGN Belgique – CartoWeb.be, IGN France – Plan IGN, ACT – geoportail.lu, CyclOSM / OpenStreetMap · Sentiers balisés © Waymarked Trails · Chasses © SPW – DNF · Photo aérienne © Esri · Relief et altitudes © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim / OpenStreetMap · Itinéraires © BRouter et OSRM · Street View © Google · Traces GPS et itinéraires balisés importés © contributeurs OpenStreetMap (ODbL), via openstreetmap.org et l'API Overpass.</p>
       </div>
     </div>
   </div>
@@ -1532,6 +1532,8 @@
             <div class="base-pane" id="basePaneTheme" role="tabpanel" aria-labelledby="baseTabTheme" hidden>
               <label class="toggle" title="OpenStreetMap orienté vélo/VTT : chemins, sentiers, revêtements"><input type="radio" name="basemap" value="cyclosm"> CyclOSM (vélo / VTT)</label>
               <label class="toggle" title="Itinéraires de randonnée balisés (GR, sentiers locaux)"><input type="checkbox" id="chkHikingTrails" autocomplete="off"> Sentiers balisés</label>
+              <label class="toggle" title="Carte des chasses du SPW (Wallonie) : limites des territoires (orange) et chasses annoncées au DNF pour la date choisie (hachures rouges : voies publiques fermées · jaune : chasse notifiée, voies accessibles)"><input type="checkbox" id="chkChasse" autocomplete="off"> Chasse (SPW Wallonie)</label>
+              <input type="date" id="chasseDate" title="Date des chasses à afficher" style="display:none;margin:2px 0 4px 24px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--panel-2);color:var(--text);font-family:inherit;font-size:12px;color-scheme:dark;">
             </div>
           <div class="hdr-pop-title">Superpositions</div>
             <label class="toggle"><input type="checkbox" id="chkAerial" autocomplete="off"> Photo aérienne</label>
@@ -1722,6 +1724,18 @@
     return best;
   }
 
+  // ---------- Carte des chasses SPW (service ArcGIS « CHASSE_DATEFERM » du géoportail de Wallonie) ----------
+  //   Couche 1 : limites des territoires de chasse · Couche 0 : chasses annoncées au DNF, filtrées sur une date
+  function chasseTileUrl(day){   // day = 'AAAA-MM-JJ' (null : aujourd'hui)
+    if(!day){ var d = new Date(); day = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2); }
+    var nx = new Date(day + 'T00:00:00Z'); nx.setUTCDate(nx.getUTCDate() + 1);
+    var next = nx.toISOString().slice(0, 10);
+    var defs = JSON.stringify({ '0': "DATE_CHASSE >= TIMESTAMP '" + day + " 00:00:00' AND DATE_CHASSE < TIMESTAMP '" + next + " 00:00:00'" });
+    return 'https://geoservices3.wallonie.be/arcgis/rest/services/APP_DNFEXT/CHASSE_DATEFERM/MapServer/export'
+      + '?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=256,256&dpi=96&format=png32&transparent=true'
+      + '&layers=show:0,1&layerDefs=' + encodeURIComponent(defs) + '&f=image';
+  }
+
   // ---------- Style : fonds de carte + terrain ----------
   var style = {
     version: 8,
@@ -1776,6 +1790,12 @@
         maxzoom: 18,
         attribution: '© Waymarked Trails (CC-BY-SA)'
       },
+      'spw-chasse': {
+        type: 'raster',
+        tiles: [chasseTileUrl(null)],
+        tileSize: 256,
+        attribution: '© SPW – DNF, carte des chasses'
+      },
       'terrain-dem': {
         type: 'raster-dem',
         tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -1791,7 +1811,8 @@
       { id:'ignfr-layer', type:'raster', source:'ignfr', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
       { id:'geoportail-lu-layer', type:'raster', source:'geoportail-lu', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
       { id:'cyclosm-layer', type:'raster', source:'cyclosm', layout:{visibility:'none'}, paint:{'raster-opacity':1} },
-      { id:'wmt-hiking-layer', type:'raster', source:'wmt-hiking', layout:{visibility:'none'}, paint:{'raster-opacity':0.9} }
+      { id:'wmt-hiking-layer', type:'raster', source:'wmt-hiking', layout:{visibility:'none'}, paint:{'raster-opacity':0.9} },
+      { id:'spw-chasse-layer', type:'raster', source:'spw-chasse', layout:{visibility:'none'}, paint:{'raster-opacity':0.75} }
     ],
     sky: {
       'sky-color': '#0b1a2a',
@@ -2281,6 +2302,8 @@
     });
     if(map.getLayer('wmt-hiking-layer'))
       map.setLayoutProperty('wmt-hiking-layer', 'visibility', document.getElementById('chkHikingTrails').checked ? 'visible' : 'none');
+    if(map.getLayer('spw-chasse-layer'))
+      map.setLayoutProperty('spw-chasse-layer', 'visibility', document.getElementById('chkChasse').checked ? 'visible' : 'none');
   }
   // Onglets « Général » / « Autres » / « Thème » (France, Luxembourg) : n'affichent qu'une partie des fonds
   var BASE_TABS = [['baseTabMain', 'basePaneMain'], ['baseTabOther', 'basePaneOther'], ['baseTabTheme', 'basePaneTheme']];
@@ -2327,6 +2350,23 @@
     chk.addEventListener('change', function(){
       try{ localStorage.setItem('gpxbox.hikingTrails', chk.checked ? '1' : '0'); }catch(e){}
       applyBasemap();
+    });
+  })();
+  (function(){   // Carte des chasses SPW : case à cocher + date (aujourd'hui par défaut, non mémorisée)
+    var chk = document.getElementById('chkChasse'), dt = document.getElementById('chasseDate');
+    var d = new Date();
+    dt.value = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    try{ chk.checked = localStorage.getItem('gpxbox.chasse') === '1'; }catch(e){}
+    function sync(){ dt.style.display = chk.checked ? 'block' : 'none'; }
+    sync();
+    chk.addEventListener('change', function(){
+      try{ localStorage.setItem('gpxbox.chasse', chk.checked ? '1' : '0'); }catch(e){}
+      sync();
+      applyBasemap();
+    });
+    dt.addEventListener('change', function(){
+      var src = map.getSource('spw-chasse');
+      if(src && dt.value) src.setTiles([chasseTileUrl(dt.value)]);
     });
   })();
   function updateTopoOpacityUI(){
