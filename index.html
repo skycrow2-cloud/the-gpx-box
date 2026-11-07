@@ -267,6 +267,7 @@
   .header-opts .toggle{white-space:nowrap;font-size:12.5px;}
   /* Légende de ce qui est affiché */
   #menuLegend > .hdr-pop{min-width:250px;max-width:290px;max-height:min(70vh,520px);overflow-y:auto;gap:4px;}
+  .maplibregl-ctrl-top-right:has(.hdr-menu.open){z-index:5;}   /* menu ouvert au-dessus de l'attribution */
   #legendBody .lg-sec{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin:8px 0 3px;}
   #legendBody .lg-sec:first-child{margin-top:0;}
   #legendBody .lg-row{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text);line-height:1.3;padding:1px 0;}
@@ -2797,9 +2798,22 @@
       // Fond de carte
       if(baseVisible && BASE_LEGENDS[currentBase]) h += sec('Fond : ' + BASEMAPS[currentBase].name) + BASE_LEGENDS[currentBase]();
       document.getElementById('legendBody').innerHTML = h || note('Rien à légender pour l\'instant.');
+      fit();
     }
+    // Garde la légende dans la carte (téléphone en paysage, petite fenêtre) : remonte le panneau et limite sa hauteur
+    function fit(){
+      var pop = menu.querySelector('.hdr-pop');
+      pop.style.top = ''; pop.style.maxHeight = '';
+      if(!menu.classList.contains('open')) return;
+      var mb = map.getContainer().getBoundingClientRect(), bb = menu.getBoundingClientRect();
+      var avail = mb.height - 16;
+      pop.style.maxHeight = Math.min(avail, 520) + 'px';
+      var overflow = pop.getBoundingClientRect().bottom - (mb.bottom - 8);
+      if(overflow > 0) pop.style.top = -Math.min(overflow, bb.top - mb.top - 8) + 'px';
+    }
+    window.addEventListener('resize', fit);
     var menu = document.getElementById('menuLegend');
-    menu.querySelector('.info-btn').addEventListener('click', build);
+    menu.querySelector('.info-btn').addEventListener('click', function(){ setTimeout(build, 0); });   // après l'ouverture du menu
     function refresh(){ if(menu.classList.contains('open')) build(); }
     // Se met à jour si l'on change de fond / superposition pendant que la légende est ouverte
     document.getElementById('menuMap').addEventListener('change', refresh);
