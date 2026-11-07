@@ -964,6 +964,11 @@
     .header-right .info-btn > svg{width:16px;height:16px;}
     .header-right .info-btn > img{width:19px !important;height:19px !important;}
   }
+  /* GSM / tablette étroite en portrait : « i » (aide) sur la ligne du titre, en haut à droite */
+  @media (max-width:760px) and (orientation:portrait), (max-width:760px) and (min-height:501px){
+    header{position:relative;}
+    #btnDoc{position:absolute;top:12px;right:10px;}
+  }
   /* ------------------------------------------------ GSM en paysage : outils de l'en-tête regroupés dans un menu déroulant */
   .hdr-tools{display:contents;}
   .ht-lbl{display:none;}
