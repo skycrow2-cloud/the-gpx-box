@@ -265,6 +265,14 @@
   .map-menu > .hdr-pop{left:auto;right:calc(100% + 8px);top:0;bottom:auto;min-width:230px;
     background:var(--glass-strong);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
   .header-opts .toggle{white-space:nowrap;font-size:12.5px;}
+  /* Légende de ce qui est affiché */
+  #menuLegend > .hdr-pop{min-width:250px;max-width:290px;max-height:min(70vh,520px);overflow-y:auto;gap:4px;}
+  #legendBody .lg-sec{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin:8px 0 3px;}
+  #legendBody .lg-sec:first-child{margin-top:0;}
+  #legendBody .lg-row{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text);line-height:1.3;padding:1px 0;}
+  #legendBody .lg-row svg{flex:none;width:34px;height:16px;background:#f2efe9;border-radius:3px;}
+  #legendBody .lg-note{font-size:11px;color:var(--text-muted);line-height:1.35;margin:2px 0;}
+  #legendBody a{color:var(--accent);}
   .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .header-right .toolbar-right{margin-left:0;}
   .header-right .hint{max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
@@ -1239,6 +1247,7 @@
           <li><span class="di">✏️</span><span><b>Crayon</b> : active le dessin à la main (un clic = un point) ; re-cliquer termine le tracé (le dernier point devient l'arrivée) ou reprend un tracé terminé.</span></li>
           <li><span class="di">⚙️</span><span><b>Réglages</b> (engrenage) : <b>Thème</b> foncé ou clair (calqué sur GPX 3D), <b>Icônes flottantes</b> (les commandes de la carte se déplacent en les faisant glisser ; « Remettre les icônes en place » pour revenir aux positions d'origine), <b>Couleur</b> et <b>Épaisseur</b> de la trace, infobulles et « Cacher les points ». Les choix sont mémorisés.</span></li>
           <li><span class="di">🗺️</span><span><b>Fond de carte</b> (bouton carte, sous Street View) : onglets <b>Général</b> (OpenTopoMap, CartoWeb.be – IGN Belgique), <b>Autres</b> (Plan IGN – France, Geoportail.lu – Luxembourg) et <b>Thème</b> (CyclOSM vélo / VTT, Sentiers balisés – Waymarked Trails, Chasse – SPW Wallonie avec choix de la date) ; superpositions Photo aérienne et Relief 3D.</span></li>
+          <li><span class="di">📋</span><span><b>Légende</b> (bouton sous le fond de carte) : symboles de ce qui est affiché — trace, superpositions actives et principaux symboles du fond choisi.</span></li>
           <li><span class="di">•</span><span>Un petit point orange signale l'outil ou le menu en cours d'utilisation ; ouvrir un outil ferme celui qui était ouvert.</span></li>
           <li><span class="di" data-ic="swatch"></span><span><b>Couleur</b> : choisit la couleur de la trace et des points (menu Réglages). Le choix est mémorisé.</span></li>
           <li><span class="di" data-ic="chk"></span><span><b>Photo aérienne</b> (menu Fond de carte) : passe sous le fond choisi. Un curseur translucide apparaît alors en bas de la carte : il règle l'opacité de la carte topographique superposée à la photo, de 0 % (photo seule) à 100 % (carte opaque). Il démarre à 30 %, soit 70 % de transparence ; le survol indique aussi la transparence. Décocher la photo masque le curseur et le remet à 30 %.</span></li>
@@ -1538,6 +1547,13 @@
           <div class="hdr-pop-title">Superpositions</div>
             <label class="toggle"><input type="checkbox" id="chkAerial" autocomplete="off"> Photo aérienne</label>
             <label class="toggle"><input type="checkbox" id="chkTerrain"> Relief 3D</label>
+        </div>
+      </div>
+      <div class="hdr-menu map-menu maplibregl-ctrl" id="menuLegend">
+        <button class="info-btn" type="button" title="Légende de ce qui est affiché" aria-label="Légende" aria-haspopup="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="4" rx="1"/><rect x="3" y="10" width="5" height="4" rx="1"/><rect x="3" y="16" width="5" height="4" rx="1"/><path d="M11 6h10M11 12h10M11 18h10"/></svg></button>
+        <div class="hdr-pop">
+          <div class="hdr-pop-title">Légende</div>
+          <div id="legendBody"></div>
         </div>
       </div>
       <div class="pitch-control" title="Assiette / inclinaison 3D">
@@ -2699,6 +2715,97 @@
     onAdd: function(){ return document.getElementById('menuMap'); },
     onRemove: function(){}
   }, 'top-right');
+  // Bouton « légende » placé sous le fond de carte
+  map.addControl({
+    onAdd: function(){ return document.getElementById('menuLegend'); },
+    onRemove: function(){}
+  }, 'top-right');
+
+  // ---------- Légende : construite d'après les fonds, superpositions et éléments affichés ----------
+  (function(){
+    function ln(c, w, dash, casing){   // trait (route, chemin…)
+      return '<svg viewBox="0 0 30 14">' + (casing ? '<line x1="2" y1="7" x2="28" y2="7" stroke="' + casing + '" stroke-width="' + (w+2) + '" stroke-linecap="round"/>' : '')
+        + '<line x1="2" y1="7" x2="28" y2="7" stroke="' + c + '" stroke-width="' + w + '" stroke-linecap="round"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') + '/></svg>';
+    }
+    function ar(fill, stroke){         // surface (forêt, eau…)
+      return '<svg viewBox="0 0 30 14"><rect x="2" y="1.5" width="26" height="11" rx="2" fill="' + fill + '" stroke="' + (stroke || 'none') + '" stroke-width="1.5"/></svg>';
+    }
+    function hatch(c){                 // surface hachurée
+      return '<svg viewBox="0 0 30 14"><defs><pattern id="lgH" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="' + c + '" stroke-width="2"/></pattern></defs><rect x="2" y="1.5" width="26" height="11" rx="2" fill="url(#lgH)" stroke="' + c + '" stroke-width="1"/></svg>';
+    }
+    function dot(c){ return '<svg viewBox="0 0 30 14"><circle cx="15" cy="7" r="5" fill="' + c + '" stroke="#fff" stroke-width="2"/></svg>'; }
+    function row(sym, txt){ return '<div class="lg-row">' + sym + '<span>' + txt + '</span></div>'; }
+    function sec(t){ return '<div class="lg-sec">' + t + '</div>'; }
+    function note(t){ return '<div class="lg-note">' + t + '</div>'; }
+    var CONTOUR = ln('#b0835a', 1.2);
+    // Légendes simplifiées des fonds (symboles principaux)
+    var BASE_LEGENDS = {
+      opentopo: function(){ return row(ln('#e66e6e', 4, null, '#9a3b3b'), 'Autoroute, voie rapide') + row(ln('#f7c27e', 3.5, null, '#a07040'), 'Route principale')
+        + row(ln('#fff3a8', 3, null, '#8a8060'), 'Route secondaire') + row(ln('#fff', 2.5, null, '#999'), 'Route locale, rue')
+        + row(ln('#8a5a2b', 1.8, '4 2'), 'Chemin, piste') + row(ln('#333', 1.3, '2 2'), 'Sentier') + row(ln('#555', 2.5, '5 3', '#fff'), 'Voie ferrée')
+        + row(ar('#c4dcae'), 'Forêt, bois') + row(ar('#a8cbe8', '#6aa0d0'), 'Eau') + row(CONTOUR, 'Courbe de niveau')
+        + note('Légende complète : <a href="https://opentopomap.org/about" target="_blank" rel="noopener">opentopomap.org</a>'); },
+      cartoweb: function(){ return row(ln('#e3342f', 4, null, '#7a1a17'), 'Autoroute') + row(ln('#f08c3a', 3.5, null, '#8a4a1a'), 'Route principale')
+        + row(ln('#ffe066', 3, null, '#8a7a30'), 'Route secondaire') + row(ln('#fff', 2.5, null, '#888'), 'Route locale')
+        + row(ln('#444', 1.5, '4 2'), 'Chemin, sentier') + row(ln('#333', 2.5, '5 3', '#fff'), 'Voie ferrée')
+        + row(ar('#cfe3b6'), 'Bois') + row(ar('#b3d4ef', '#5c9ad1'), 'Eau') + row(CONTOUR, 'Courbe de niveau')
+        + note('Carte topographique officielle de l\'IGN Belgique.'); },
+      ignfr: function(){ return row(ln('#f08a3a', 4, null, '#8a3a10'), 'Autoroute') + row(ln('#f5c045', 3.5, null, '#8a6010'), 'Route principale')
+        + row(ln('#fff3a0', 3, null, '#8a8050'), 'Route secondaire') + row(ln('#fff', 2.5, null, '#999'), 'Route locale')
+        + row(ln('#666', 1.5, '4 2'), 'Chemin, sentier') + row(ln('#666', 2.5, '5 3', '#fff'), 'Voie ferrée')
+        + row(ar('#d3e8c0'), 'Forêt') + row(ar('#b7d6f0', '#6aa0d0'), 'Eau')
+        + note('Plan IGN (France) : symboles principaux.'); },
+      lux: function(){ return row(ln('#e3342f', 4, null, '#7a1a17'), 'Autoroute') + row(ln('#f5b041', 3.5, null, '#8a6010'), 'Route principale')
+        + row(ln('#fff', 2.5, null, '#888'), 'Route locale') + row(ln('#444', 1.5, '4 2'), 'Chemin, sentier')
+        + row(ar('#cfe3b6'), 'Forêt') + row(ar('#b3d4ef', '#5c9ad1'), 'Eau') + row(CONTOUR, 'Courbe de niveau')
+        + note('Carte topographique de l\'ACT (Luxembourg) : symboles principaux.'); },
+      cyclosm: function(){ return row(ln('#1b5cff', 3), 'Piste cyclable séparée') + row(ln('#1b5cff', 2.5, '4 3'), 'Bande cyclable')
+        + row(ln('#6ea0ff', 3, null, '#fff'), 'Voie partagée, rue cyclable') + row(ln('#8a5a2b', 2, '4 2'), 'Chemin, piste (VTT)')
+        + row(ln('#c0392b', 1.5, '2 2'), 'Sentier') + row(ar('#c8e0b0'), 'Forêt') + row(ar('#aad3df', '#6aa0d0'), 'Eau')
+        + note('Légende complète : <a href="https://www.cyclosm.org/legend.html" target="_blank" rel="noopener">cyclosm.org</a>'); }
+    };
+    function build(){
+      var h = '';
+      var aerial = document.getElementById('chkAerial').checked;
+      var rng = document.getElementById('rngTopoOpacity');
+      var baseVisible = !aerial || (parseInt(rng.value, 10) || 0) > 0;
+      // Éléments de l'application
+      var app = '';
+      if(typeof points !== 'undefined' && points.length >= 2) app += row(ln(trackColor, Math.min(trackWidth, 6)), 'Votre trace');
+      if(typeof points !== 'undefined' && points.length) app += row('<svg viewBox="0 0 30 14"><circle cx="15" cy="7" r="5.5" fill="' + trackColor + '" stroke="#fff" stroke-width="1.5"/></svg>', 'Point de la trace (numéroté)');
+      if(typeof backtrackRuns !== 'undefined' && backtrackRuns.length) app += row(ln('#f2c94c', 5, '3 2'), 'Aller-retour sur le même chemin');
+      var grb = document.getElementById('gpsRecBar');
+      if(grb && grb.classList.contains('show')) app += row(ln('#d9342b', 3), 'Enregistrement GPS') + row(dot('#2f80ed'), 'Position GPS');
+      if(app) h += sec('Sur la carte') + app;
+      // Superpositions
+      var ov = '';
+      if(document.getElementById('chkChasse').checked){
+        var d = document.getElementById('chasseDate').value;
+        var dTxt = d ? d.split('-').reverse().join('/') : 'aujourd\'hui';
+        ov += row(ar('none', '#ffaa00'), 'Territoire de chasse (limite)')
+          + row(hatch('#e60000'), 'Chasse le ' + dTxt + ' : voies publiques fermées')
+          + row(ar('rgba(230,212,0,.75)'), 'Chasse le ' + dTxt + ' : notifiée, voies accessibles')
+          + note('Source SPW – DNF (Wallonie uniquement).');
+      }
+      if(document.getElementById('chkHikingTrails').checked){
+        ov += row(ln('#d62020', 3), 'Itinéraire international (GR européen)') + row(ln('#2050d0', 3), 'Itinéraire national (GR)')
+          + row(ln('#e08a00', 3), 'Itinéraire régional') + row(ln('#8a2be2', 3), 'Itinéraire local');
+      }
+      if(aerial) ov += row(ar('#5b6b4a'), 'Photo aérienne (Esri)');
+      if(document.getElementById('chkTerrain').checked) ov += row(ar('#8a7a6a'), 'Relief 3D');
+      if(ov) h += sec('Superpositions') + ov;
+      // Fond de carte
+      if(baseVisible && BASE_LEGENDS[currentBase]) h += sec('Fond : ' + BASEMAPS[currentBase].name) + BASE_LEGENDS[currentBase]();
+      document.getElementById('legendBody').innerHTML = h || note('Rien à légender pour l\'instant.');
+    }
+    var menu = document.getElementById('menuLegend');
+    menu.querySelector('.info-btn').addEventListener('click', build);
+    function refresh(){ if(menu.classList.contains('open')) build(); }
+    // Se met à jour si l'on change de fond / superposition pendant que la légende est ouverte
+    document.getElementById('menuMap').addEventListener('change', refresh);
+    document.getElementById('rngTopoOpacity').addEventListener('input', refresh);
+    map.on('idle', refresh);
+  })();
   function setStreetViewMode(on){
     svPickMode = !!on;
     if(svMapBtn) svMapBtn.classList.toggle('sv-active', svPickMode);
@@ -5322,6 +5429,7 @@
       { btn:'#menuSettings > .info-btn', menu:'menuSettings' },
       { btn:'#menuExport > .info-btn',   menu:'menuExport' },
       { btn:'#menuMap > .info-btn',      menu:'menuMap' },
+      { btn:'#menuLegend > .info-btn',   menu:'menuLegend' },
       { btn:'#btnDraw' },
       { btn:'#btnDoc' }
     ];
@@ -5375,6 +5483,7 @@
       [function(){ return document.querySelector('#menuSettings > .info-btn'); }, function(){ return has('menuSettings', 'open'); }],
       [function(){ return document.getElementById('btnExport'); }, function(){ return has('menuExport', 'open'); }],
       [function(){ return document.querySelector('#menuMap > .info-btn'); }, function(){ return has('menuMap', 'open'); }],
+      [function(){ return document.querySelector('#menuLegend > .info-btn'); }, function(){ return has('menuLegend', 'open'); }],
       [function(){ return document.querySelector('.sv-map-btn'); }, function(){ return typeof svPickMode !== 'undefined' && svPickMode; }],
       [function(){ return document.getElementById('searchToggle'); }, function(){ return has('searchBox', 'expanded'); }],
       [function(){ return document.getElementById('coordToggle'); }, function(){ return has('coordBox', 'expanded'); }]
