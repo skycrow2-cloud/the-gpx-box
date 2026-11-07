@@ -6853,8 +6853,12 @@
   // l'éditeur avec ses heures de passage ; le GPX complet reste disponible dans le menu Exporter.
   (function(){
     var btn = document.getElementById('btnGpsRec');
-    if(!btn || !navigator.geolocation) return;
-    var touch = window.matchMedia('(pointer:coarse)').matches || window.matchMedia('(max-width:760px)').matches;
+    // Application Android (Capacitor) : GPS natif, qui continue écran éteint (service de premier plan + notification)
+    var CAP = window.Capacitor;
+    var NATIVE = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.registerPlugin);
+    var BG = NATIVE ? CAP.registerPlugin('BackgroundGeolocation') : null;
+    if(!btn || (!NATIVE && !navigator.geolocation)) return;
+    var touch = NATIVE || window.matchMedia('(pointer:coarse)').matches || window.matchMedia('(max-width:760px)').matches;
     var KEY = 'gpxbox.gpsRec', RAW_KEY = 'gpxbox.gpsRecLast';
     var MAX_ACC = 30, MIN_STEP = 5, MAX_SPEED = 55;   // m, m, m/s
     var rec = null;        // { pts:[{lat,lng,ele,t,acc}], start, pausedMs, pauseAt, paused }
@@ -6990,12 +6994,47 @@
     }
     function startWatching(){
       if(watchId !== null) return;
-      watchId = navigator.geolocation.watchPosition(onFix, onError, { enableHighAccuracy:true, maximumAge:0, timeout:30000 });
+      if(NATIVE) startNative();
+      else watchId = navigator.geolocation.watchPosition(onFix, onError, { enableHighAccuracy:true, maximumAge:0, timeout:30000 });
       clearInterval(tick); tick = setInterval(updateBar, 1000);
       lockScreen();
     }
+    function startNative(){
+      watchId = 'pending';
+      // Android 13+ : autorisation d'afficher la notification « enregistrement en cours »
+      var notif = Promise.resolve();
+      try{ notif = CAP.registerPlugin('LocalNotifications').requestPermissions().catch(function(){}); }catch(e){}
+      notif.then(function(){
+        if(watchId !== 'pending') return null;
+        return BG.addWatcher({
+          backgroundTitle: 'Enregistrement de la trace en cours',
+          backgroundMessage: 'Touchez pour revenir à The-GPX-Box',
+          requestPermissions: true, stale: false, distanceFilter: 0
+        }, function(loc, err){
+          if(err){
+            if(err.code === 'NOT_AUTHORIZED'){
+              stopWatching();
+              if(rec && !rec.pts.length){ rec = null; try{ localStorage.removeItem(KEY); }catch(e){} }
+              refreshUI();
+              if(confirm('L\'application n\'a pas accès à la position.\n\nOuvrir les réglages pour l\'autoriser ?')) BG.openSettings();
+            }
+            return;
+          }
+          if(!loc) return;
+          onFix({ coords:{ latitude:loc.latitude, longitude:loc.longitude, accuracy:loc.accuracy, altitude:loc.altitude }, timestamp:loc.time || Date.now() });
+        });
+      }).then(function(id){
+        if(id == null) return;
+        if(watchId === 'pending') watchId = id;
+        else BG.removeWatcher({ id:id });   // arrêté entre-temps
+      }).catch(function(e){
+        watchId = null;
+        alert('GPS indisponible : ' + (e && e.message || e));
+      });
+    }
     function stopWatching(){
-      if(watchId !== null) navigator.geolocation.clearWatch(watchId);
+      if(NATIVE){ if(watchId !== null && watchId !== 'pending') BG.removeWatcher({ id:watchId }); }
+      else if(watchId !== null) navigator.geolocation.clearWatch(watchId);
       watchId = null;
       clearInterval(tick); tick = null;
       unlockScreen();
@@ -7081,6 +7120,11 @@
     btn.addEventListener('click', function(ev){
       ev.stopPropagation();
       if(rec){ stop(); return; }
+      if(NATIVE){
+        if(!confirm('Démarrer l\'enregistrement GPS ?\n\nIl continue écran éteint, téléphone en poche : une notification « Enregistrement de la trace en cours » reste affichée jusqu\'à la fin.')) return;
+        start();
+        return;
+      }
       if(!window.isSecureContext){ alert('Le GPS n\'est accessible que sur une page sécurisée (https).'); return; }
       if(!confirm('Démarrer l\'enregistrement GPS ?\n\nGardez cette page ouverte et l\'écran allumé pendant la marche : ' +
           'sur téléphone, le navigateur coupe le GPS dès que l\'écran se verrouille ou qu\'une autre application passe au premier plan.')) return;
@@ -7112,7 +7156,7 @@
       if(!r) return;
       closeExportMenu();
       var name = recName(r), text = rawGpx(r, name);
-      if(canShareGpx && touch){
+      if(canShareGpx && touch && !NATIVE){
         try{
           await navigator.share({ files:[ new File([text], name + '.gpx', { type:'application/gpx+xml' }) ], title:name });
           return;
@@ -7121,6 +7165,23 @@
       downloadGpx(text, name);
     });
     updateRawItem();
+
+    if(NATIVE){
+      // Pas de téléchargement dans l'application : le GPX est proposé au partage
+      // (Fichiers, Drive, Garmin Connect, e-mail…)
+      var FS = CAP.registerPlugin('Filesystem'), SH = CAP.registerPlugin('Share');
+      downloadGpx = function(text, fileName){
+        var name = String(fileName || 'trace').replace(/[\\/:*?"<>|]/g, '-') + '.gpx';
+        FS.writeFile({ path:name, data:text, directory:'CACHE', encoding:'utf8' }).then(function(r){
+          return SH.share({ title:name, dialogTitle:'Enregistrer ou envoyer ' + name, files:[ r.uri ] });
+        }).catch(function(e){
+          if(e && /cancel/i.test(e.message || '')) return;
+          alert('Partage du fichier impossible : ' + (e && e.message || e));
+        });
+      };
+      // les fichiers .gpx n'ont pas de type reconnu par Android : on ne filtre pas le sélecteur
+      document.querySelectorAll('input[type=file][accept]').forEach(function(i){ i.removeAttribute('accept'); });
+    }
 
     // --- enregistrement interrompu (page rechargée, onglet fermé…) ---
     var pending = null;

@@ -1,0 +1,55 @@
+name: Application Android
+
+# À chaque modification du site ou de l'application : construit l'APK et le publie
+# dans la release « android » (lien fixe pour le téléchargement sur le téléphone).
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'aide/**', 'app/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Page web → application
+        working-directory: app
+        run: |
+          npm ci
+          npm run sync
+
+      - name: Construction de l'APK
+        working-directory: app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/The-GPX-Box.apk"
+
+      - name: Publication (release « android »)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="Version 1.${{ github.run_number }} — $(git log -1 --pretty=%s)"
+          gh release delete android --yes --cleanup-tag 2>/dev/null || true
+          gh release create android The-GPX-Box.apk --title "Application Android (1.${{ github.run_number }})" --notes "$NOTES" --latest
