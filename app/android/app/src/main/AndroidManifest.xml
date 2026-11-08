@@ -22,6 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- trace envoyée directement par l'application GPX 3D -->
+            <intent-filter>
+                <action android:name="io.github.skycrow2cloud.gpxsuite.HANDOFF" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
         </activity>
 
         <provider
@@ -34,6 +40,11 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
     </application>
+
+    <!-- Android 11+ : voir si GPX 3D est installée (passage direct entre les deux applications) -->
+    <queries>
+        <package android:name="io.github.skycrow2cloud.gpx3d" />
+    </queries>
 
     <!-- Permissions -->
 

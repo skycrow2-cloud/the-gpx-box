@@ -6977,9 +6977,14 @@
   // ---------- Passage The-GPX-Box ⇄ GPX 3D ----------
   // Les deux pages sont sur le même site (skycrow2-cloud.github.io) : le tracé passe par le stockage local
   // (clé 'gpxsuite.handoff'), puis l'autre page s'ouvre dans son propre onglet (réutilisé), adresse terminée par #handoff.
+  // Dans l'application Android : passage direct à l'application GPX 3D si elle est installée (module natif GpxSuite),
+  // sinon bascule sur le site comme ci-dessus.
   (function appSwitch(){
     var KEY = 'gpxsuite.handoff', MAX_AGE_MS = 2 * 60 * 1000;
     var VIEWER_URL = 'https://skycrow2-cloud.github.io/gpx-3d-viewer/';
+    var CAP = window.Capacitor;
+    var SUITE = (CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.registerPlugin) ? CAP.registerPlugin('GpxSuite') : null;
+    var mapReady = false;
     function handoffGpx(trackName){
       var trkpts = points.map(function(p){
         var ele = typeof p.ele === 'number' ? '<ele>' + p.ele.toFixed(1) + '</ele>' : '';
@@ -6991,28 +6996,43 @@
     }
     document.getElementById('btnToViewer').addEventListener('click', function(ev){
       ev.stopPropagation();
-      var has = points.length >= 2;
-      try{
-        if(has){
-          var name = 'randonnee_' + new Date().toISOString().slice(0, 10);
-          localStorage.setItem(KEY, JSON.stringify({ gpx: handoffGpx(name), name: name, from: 'gpxbox', t: Date.now() }));
-        } else localStorage.removeItem(KEY);
-      }catch(e){}
-      window.open(VIEWER_URL + (has ? '#handoff' : ''), 'gpx-3d-viewer');
+      var has = points.length >= 2, payload = '';
+      if(has){
+        var name = 'randonnee_' + new Date().toISOString().slice(0, 10);
+        payload = JSON.stringify({ gpx: handoffGpx(name), name: name, from: 'gpxbox', t: Date.now() });
+      }
+      function toSite(){
+        try{
+          if(payload) localStorage.setItem(KEY, payload);
+          else localStorage.removeItem(KEY);
+        }catch(e){}
+        window.open(VIEWER_URL + (has ? '#handoff' : ''), 'gpx-3d-viewer');
+      }
+      if(!SUITE) return toSite();
+      SUITE.openOther({ payload: payload }).then(function(r){ if(!r || !r.ok) toSite(); }, toSite);   // application GPX 3D absente : le site
     });
-    function receive(){
-      if(location.hash !== '#handoff') return;
-      history.replaceState(null, '', location.pathname + location.search);
-      var h = null;
-      try{ h = JSON.parse(localStorage.getItem(KEY) || 'null'); localStorage.removeItem(KEY); }catch(e){}
+    function load(h){
       if(!h || !h.gpx || h.from === 'gpxbox' || Date.now() - h.t > MAX_AGE_MS) return;
       try{
         var g = gpxTextToCoords(h.gpx);
         if(g.coords.length >= 2) applyOsmImport(g.coords, g.name || String(h.name || 'Trace').replace(/\.gpx$/i, ''));
       }catch(e){ alert('Trace reçue de GPX 3D illisible : ' + e.message); }
     }
+    function receive(){
+      if(location.hash === '#handoff'){
+        history.replaceState(null, '', location.pathname + location.search);
+        var h = null;
+        try{ h = JSON.parse(localStorage.getItem(KEY) || 'null'); localStorage.removeItem(KEY); }catch(e){}
+        load(h);
+      }
+      if(SUITE) SUITE.takeHandoff().then(function(r){   // trace reçue de l'application GPX 3D
+        if(r && r.payload){ try{ load(JSON.parse(r.payload)); }catch(e){} }
+      }, function(){});
+    }
     window.addEventListener('hashchange', receive);
-    map.once('load', receive);   // au démarrage : une fois la carte prête (le script s'exécute avant son chargement)
+    // appelé par l'application quand une trace arrive alors que la page est ouverte (rien tant que la carte n'est pas prête)
+    window.__gpxSuiteReceive = function(){ if(mapReady) receive(); };
+    map.once('load', function(){ mapReady = true; receive(); });   // au démarrage : une fois la carte prête
   })();
 
   // ---------- Enregistrement de la trace avec le GPS du téléphone (GSM / tablette) ----------
