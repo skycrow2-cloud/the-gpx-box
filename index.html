@@ -163,7 +163,7 @@
   .gpx-results small{display:block;color:var(--text-muted);font-size:11px;margin-top:1px;}
   .gpx-fallback{margin-top:8px;padding:8px 9px;border:1px dashed var(--accent);border-radius:7px;background:var(--accent-soft);font-size:11.5px;line-height:1.45;}
   .gpx-fallback label.btn{display:block;text-align:center;margin-top:7px;font-size:12px;padding:6px 8px;cursor:pointer;}
-  .info-btn.active{background:var(--accent);color:#1b1206;box-shadow:0 0 0 3px var(--accent-soft);}
+  .info-btn.active, .info-btn.tool-on{background:var(--accent);color:#1b1206;box-shadow:0 0 0 3px var(--accent-soft);}
   header h1{
     font-family:'Space Grotesk',sans-serif;
     font-weight:700;
@@ -989,11 +989,11 @@
     header{position:relative;}
     #btnDoc{position:absolute;top:12px;right:10px;}
   }
-  /* ------------------------------------------------ GSM en paysage : outils de l'en-tête regroupés dans un menu déroulant */
+  /* ------------------------------------------------ GSM en paysage, GSM et tablette en portrait : outils de l'en-tête regroupés dans un seul menu déroulant */
   .hdr-tools{display:contents;}
   .ht-lbl{display:none;}
   #btnHdrTools{display:none;}
-  @media (max-height:500px) and (orientation:landscape){
+  @media (max-height:500px) and (orientation:landscape), (max-width:1024px) and (orientation:portrait){
     /* bouton ☰ toujours sur la même ligne que le titre, collé à droite (même sous 760 px de large) */
     header{flex-wrap:nowrap !important;}
     .header-right{position:relative;flex:0 0 auto !important;width:auto !important;margin-left:auto !important;flex-wrap:nowrap;justify-content:flex-end;}
@@ -1013,6 +1013,16 @@
     .hdr-tools #btnDoc{font-size:16px;}
     .hdr-tools .hdr-menu{width:100%;position:static;}
     .hdr-tools #menuSettings > .hdr-pop, .hdr-tools #menuExport > .hdr-pop{left:auto;right:calc(100% + 8px);top:0;max-height:calc(100vh - 70px);max-height:calc(100dvh - 70px);overflow-y:auto;}
+    .hdr-tools #btnDoc{position:static;}
+    .hdr-tools .info-btn.tool-on .ht-lbl{color:#1b1206;}
+  }
+  /* GSM / tablette en portrait : menu ajusté à la largeur de l'écran, sous-menus (Exporter, Réglages) déroulés dans le menu */
+  @media (max-width:1024px) and (orientation:portrait){
+    .hdr-tools{width:min(360px, calc(100vw - 20px));grid-template-columns:repeat(2, minmax(0, 1fr));
+      max-height:calc(100vh - 80px);max-height:calc(100dvh - 80px);overflow-y:auto;}
+    .hdr-tools .ht-lbl{overflow:hidden;text-overflow:ellipsis;}
+    .hdr-tools .hdr-menu.open{grid-column:1 / -1;}
+    .hdr-tools #menuSettings > .hdr-pop, .hdr-tools #menuExport > .hdr-pop{position:static;min-width:0;margin-top:6px;max-height:none;overflow:visible;}
   }
   /* ------------------------------------------------ GSM en paysage : barre d'assiette en haut à gauche, sous la loupe */
   @media (max-height:500px) and (orientation:landscape){
@@ -1632,7 +1642,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.48 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.49 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -2000,6 +2010,7 @@
 
   // Curseur : flèche au repos ; cible pendant la création d'un tracé ; croix pendant un choix sur la carte
   var manualDrawing = false;
+  var lastTrackTool = null;   // outil qui a produit le tracé actuel (Dessiner, Enregistrer, Itinéraire, Importer)
   function updateIdleCursor(){
     if(typeof updateDrawTouchBar === 'function') updateDrawTouchBar();
     updateCursorLabel();
@@ -2008,16 +2019,16 @@
     if(routePickMode || (typeof svPickMode !== 'undefined' && svPickMode)){ c.style.cursor = CURSOR_CROSS; return; }
     var drawing = !pointsHidden && finishIndex === null && (manualDrawing || points.length > 0);
     c.style.cursor = drawing ? CURSOR_TARGET : 'default';
-    var b = document.getElementById('btnDraw');
-    if(b) b.classList.toggle('active', drawing);
+    if(window.gpxSyncTools) window.gpxSyncTools();
   }
   map.getCanvas().style.cursor = 'default';
   function isDrawingActive(){ return !pointsHidden && finishIndex === null && (manualDrawing || points.length > 0); }
   function setManualDrawing(on){
     manualDrawing = !!on;
+    if(manualDrawing) lastTrackTool = 'btnDraw';
     if(manualDrawing && finishIndex !== null && points.length){ finishIndex = null; rebuildMarkers(); }   // reprendre un tracé terminé
     var b = document.getElementById('btnDraw');
-    if(b){ b.classList.toggle('active', isDrawingActive()); b.setAttribute('aria-pressed', isDrawingActive() ? 'true' : 'false'); }
+    if(b) b.setAttribute('aria-pressed', isDrawingActive() ? 'true' : 'false');
     updateIdleCursor();
   }
   // Main (« grabbing ») dès l'appui pour déplacer la carte, curseur précédent restauré au relâchement
@@ -2127,7 +2138,7 @@
     try{ localStorage.setItem('gpxbox.trackColor', c); }catch(e){}
   }
   // Menus déroulants de l'en-tête (fond de carte / réglages)
-  // GSM en paysage : bouton « Outils » qui ouvre / ferme le menu déroulant des outils de l'en-tête
+  // GSM en paysage, GSM et tablette en portrait : bouton « Outils » qui ouvre / ferme le menu déroulant des outils de l'en-tête
   (function(){
     var btn = document.getElementById('btnHdrTools'), box = document.getElementById('hdrTools');
     if(!btn || !box) return;
@@ -5118,15 +5129,39 @@
     map.flyTo({ center:[c.lng, c.lat], duration:600 });
   });
 
-  document.getElementById('btnReset').addEventListener('click', function(){
-    if(points.length && !confirm('Effacer tout le tracé ?')) return;
+  function clearTrack(){
     manualDrawing = false;
     points = [];
     finishIndex = null;
     rebuildMarkers();
     redraw();
     drawProfile();
+  }
+  document.getElementById('btnReset').addEventListener('click', function(){
+    if(points.length && !confirm('Effacer tout le tracé ?')) return;
+    clearTrack();
   });
+
+  // ---------- Changement d'outil : proposer de supprimer le tracé existant ----------
+  // Dessiner, Enregistrer (GPS), Itinéraire et Importer produisent un tracé : en passer de l'un à l'autre
+  // alors qu'un tracé est commencé ou terminé demande s'il faut l'effacer (Annuler = le conserver).
+  (function(){
+    var NAMES = { btnDraw:'Dessiner', btnGpsRec:'Enregistrer', btnRouteSuggest:'Itinéraire', btnImportCoords:'Importer' };
+    function hidden(id){ var el = document.getElementById(id); return !el || getComputedStyle(el).display === 'none'; }
+    document.addEventListener('click', function(ev){
+      var b = ev.target.closest && ev.target.closest('#btnDraw, #btnGpsRec, #btnRouteSuggest, #btnImportCoords');
+      if(!b || b.disabled) return;
+      var id = b.id, opening;
+      if(id === 'btnDraw') opening = !isDrawingActive();
+      else if(id === 'btnGpsRec') opening = !b.classList.contains('rec-on');
+      else if(id === 'btnRouteSuggest') opening = hidden('routePanel');
+      else opening = hidden('importPanel');
+      if(!opening) return;
+      if(points.length && lastTrackTool !== id &&
+         confirm('Un tracé existe déjà.\nLe supprimer avant d\'utiliser « ' + NAMES[id] + ' » ?\n\nOK = supprimer · Annuler = le conserver')) clearTrack();
+      lastTrackTool = id;
+    }, true);
+  })();
 
   // ---------- Export GPX ----------
   var expNameEl = document.getElementById('expName');
@@ -5505,6 +5540,7 @@
     var rules = [
       [function(){ return document.getElementById('btnRouteSuggest'); }, function(){ return shown('routePanel'); }],
       [function(){ return document.getElementById('btnDraw'); }, function(){ return typeof isDrawingActive === 'function' && isDrawingActive(); }],
+      [function(){ return document.getElementById('btnGpsRec'); }, function(){ return has('btnGpsRec', 'rec-on'); }],
       [function(){ return document.getElementById('btnImportCoords'); }, function(){ return shown('importPanel'); }],
       [function(){ return document.getElementById('btnOsm'); }, function(){ return shown('osmPanel'); }],
       [function(){ return document.getElementById('btnDoc'); }, function(){ return shown('docOverlay'); }],
@@ -5528,10 +5564,16 @@
         if(!el) return;
         el.classList.add('in-use-host');
         el.classList.toggle('in-use', i === winner);
+        // surbrillance orange : uniquement l'outil en cours de l'en-tête (l'ancien la perd)
+        el.classList.toggle('tool-on', i === winner && !!el.closest('#hdrTools') && !el.closest('.hdr-menu'));
       });
     }
+    window.gpxSyncTools = sync;
     document.addEventListener('click', function(ev){
       rules.forEach(function(r, i){ var el = r[0](); if(el && el.contains(ev.target)) stamps[i] = ++clock; });
+      // un nouvel outil de l'en-tête referme les menus Exporter / Réglages restés ouverts
+      var tb = ev.target.closest && ev.target.closest('#hdrTools .info-btn');
+      if(tb && !tb.closest('.hdr-menu')) document.querySelectorAll('.hdr-menu.open').forEach(function(m){ m.classList.remove('open'); });
       setTimeout(sync, 0);
     }, true);
     document.addEventListener('keyup', function(){ setTimeout(sync, 0); });
