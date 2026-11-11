@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<script>try{if(localStorage.getItem('gpxbox-theme')==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+<script>try{var t=localStorage.getItem('gpxbox-theme');if(t==='light'||t==='grey')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The-GPX-Box</title>
@@ -898,6 +898,27 @@
     .body.side-collapsed #sideToggle svg{transform:rotate(90deg);}
     .body.side-collapsed #map{flex:1;height:auto;}
   }
+  /* ------------------------------------------------ thème gris (Réglages › Thème) : intermédiaire entre foncé et clair */
+  :root[data-theme="grey"]{
+    --bg:#3b414a;
+    --panel:#454c56;
+    --panel-2:#4f5761;
+    --border:#626b77;
+    --text:#f3f0ea;
+    --text-muted:#bcc3cd;
+    --glass: rgba(72,80,92,.5);
+    --glass-hover: rgba(72,80,92,.68);
+    --glass-strong: rgba(66,74,85,.82);
+    --tip-bg: rgba(66,74,85,.76);
+    --win-bg: rgba(64,71,81,.66);
+    --accent-2:#5cc4d2;
+  }
+  :root[data-theme="grey"] header{background:linear-gradient(180deg, rgba(76,84,95,.97), rgba(66,73,83,.97));}
+  :root[data-theme="grey"] .hdr-pop, :root[data-theme="grey"] #importPanel, :root[data-theme="grey"] #routePanel,
+  :root[data-theme="grey"] #osmPanel, :root[data-theme="grey"] #startInvite, :root[data-theme="grey"] .doc-modal,
+  :root[data-theme="grey"] .search-results{ --panel: rgba(64,71,81,.5); --panel-2: rgba(80,88,99,.55); }
+  :root[data-theme="grey"] .hdr-pop option, :root[data-theme="grey"] #importPanel option,
+  :root[data-theme="grey"] #routePanel option, :root[data-theme="grey"] #osmPanel option{background:#4f5761;}
   /* ------------------------------------------------ thème clair (Réglages › Thème), calqué sur GPX 3D */
   :root[data-theme="light"]{
     color-scheme: light;
@@ -1151,6 +1172,7 @@
           <div class="hdr-pop-title">Apparence</div>
             <div class="theme-switch"><span>Thème</span>
               <button class="btn" id="themeDark" type="button">Foncé</button>
+              <button class="btn" id="themeGrey" type="button">Gris</button>
               <button class="btn" id="themeLight" type="button">Clair</button>
             </div>
             <label class="toggle" title="Les commandes posées sur la carte peuvent être déplacées en les faisant glisser"><input type="checkbox" id="chkFloating" autocomplete="off"> Icônes flottantes (déplaçables)</label>
@@ -1642,7 +1664,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.49 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.50 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -4694,8 +4716,9 @@
   // ---------- Profil altimétrique (SVG) ----------
   var svgNS = 'http://www.w3.org/2000/svg';
   function profileColors(){
-    var light = document.documentElement.getAttribute('data-theme') === 'light';
-    return light ? { text:'#5b626d', grid:'#d6d0c4', axis:'#b9b2a3', msg:'#7a818b', fade:'#f7f5f0', frame:'#cfc8bb' }
+    var th = document.documentElement.getAttribute('data-theme');
+    if(th === 'grey') return { text:'#bcc3cd', grid:'#5a636e', axis:'#6b7580', msg:'#a3abb6', fade:'#4f5761', frame:'#77818d' };
+    return th === 'light' ? { text:'#5b626d', grid:'#d6d0c4', axis:'#b9b2a3', msg:'#7a818b', fade:'#f7f5f0', frame:'#cfc8bb' }
                  : { text:'#8b93a1', grid:'#2a323c', axis:'#3a4350', msg:'#6b7380', fade:'#1b222a', frame:'#4a5462' };
   }
   function drawProfile(){
@@ -5365,26 +5388,26 @@
     map.on('movestart', close);
   })();
 
-  // ---------- Thème clair / foncé (calqué sur GPX 3D) ----------
+  // ---------- Thème foncé / gris / clair (calqué sur GPX 3D) ----------
   (function initTheme(){
-    var bD = document.getElementById('themeDark'), bL = document.getElementById('themeLight');
-    function isLight(){ return document.documentElement.getAttribute('data-theme') === 'light'; }
-    function sync(){ bD.classList.toggle('active', !isLight()); bL.classList.toggle('active', isLight()); }
-    function setTheme(light){
-      if(light) document.documentElement.setAttribute('data-theme', 'light');
-      else document.documentElement.removeAttribute('data-theme');
-      try{ localStorage.setItem('gpxbox-theme', light ? 'light' : 'dark'); }catch(e){}
+    var btns = { dark:document.getElementById('themeDark'), grey:document.getElementById('themeGrey'), light:document.getElementById('themeLight') };
+    var SKY = { dark:['#0b1a2a','#3a4a5a','#0e1217'], grey:['#4f6377','#8a99a8','#3b414a'], light:['#a9cbe6','#e6edf2','#eeebe4'] };
+    function cur(){ var t = document.documentElement.getAttribute('data-theme'); return (t === 'light' || t === 'grey') ? t : 'dark'; }
+    function sync(){ var c = cur(); Object.keys(btns).forEach(function(k){ if(btns[k]) btns[k].classList.toggle('active', k === c); }); }
+    function setTheme(t){
+      if(t === 'light' || t === 'grey') document.documentElement.setAttribute('data-theme', t);
+      else { t = 'dark'; document.documentElement.removeAttribute('data-theme'); }
+      try{ localStorage.setItem('gpxbox-theme', t); }catch(e){}
       sync();
       try{
-        if(map.setSky) map.setSky({ 'sky-color': light ? '#a9cbe6' : '#0b1a2a', 'horizon-color': light ? '#e6edf2' : '#3a4a5a',
-          'fog-color': light ? '#eeebe4' : '#0e1217', 'fog-ground-blend':0.5, 'sky-horizon-blend':0.5, 'horizon-fog-blend':0.6 });
+        if(map.setSky) map.setSky({ 'sky-color': SKY[t][0], 'horizon-color': SKY[t][1],
+          'fog-color': SKY[t][2], 'fog-ground-blend':0.5, 'sky-horizon-blend':0.5, 'horizon-fog-blend':0.6 });
       }catch(e){}
       if(typeof drawProfile === 'function') drawProfile();
     }
-    bD.addEventListener('click', function(){ setTheme(false); });
-    bL.addEventListener('click', function(){ setTheme(true); });
+    Object.keys(btns).forEach(function(k){ if(btns[k]) btns[k].addEventListener('click', function(){ setTheme(k); }); });
     sync();
-    if(isLight()) map.once('load', function(){ setTheme(true); });
+    if(cur() !== 'dark') map.once('load', function(){ setTheme(cur()); });
   })();
 
   // ---------- Icônes flottantes (option Réglages) : commandes de la carte déplaçables ----------
