@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget carré pour l'écran externe du razr : chrono, distance et commandes de l'enregistrement GPS -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wg_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/wg_bg"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_wg_pin"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:id="@+id/wg_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Prêt"
+            android:textColor="#B3FFFFFF"
+            android:textSize="13sp" />
+
+        <ImageView
+            android:id="@+id/wg_map"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/wg_btn_neutral"
+            android:contentDescription="Ouvrir la carte"
+            android:padding="6dp"
+            android:src="@drawable/ic_wg_map" />
+    </LinearLayout>
+
+    <Chronometer
+        android:id="@+id/wg_chrono"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="#FFFFFFFF"
+        android:textSize="34sp" />
+
+    <TextView
+        android:id="@+id/wg_km"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0,00 km"
+        android:textColor="#FFE8A33D"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/wg_start"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/wg_btn_primary"
+            android:contentDescription="Démarrer l'enregistrement"
+            android:padding="14dp"
+            android:src="@drawable/ic_wg_rec" />
+
+        <ImageView
+            android:id="@+id/wg_pause"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/wg_btn_primary"
+            android:contentDescription="Pause"
+            android:padding="13dp"
+            android:src="@drawable/ic_wg_pause"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/wg_stop"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="18dp"
+            android:background="@drawable/wg_btn_stop"
+            android:contentDescription="Terminer l'enregistrement"
+            android:padding="15dp"
+            android:src="@drawable/ic_wg_stop"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

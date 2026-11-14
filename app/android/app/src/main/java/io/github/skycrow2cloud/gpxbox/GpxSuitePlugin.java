@@ -9,6 +9,7 @@ import android.net.Uri;
 
 import androidx.core.content.FileProvider;
 
+import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -19,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -32,6 +34,40 @@ public class GpxSuitePlugin extends Plugin {
     static final String ACTION = "io.github.skycrow2cloud.gpxsuite.HANDOFF";
     static final String OTHER_PKG = "io.github.skycrow2cloud.gpx3d";
     static volatile String pending;   // trace reçue de GPX 3D, en attente d'être lue par la page
+    static volatile String widgetAction;   // bouton du widget touché, en attente d'être traité par la page
+    private static WeakReference<Bridge> bridgeRef = new WeakReference<>(null);
+
+    @Override
+    public void load() {
+        bridgeRef = new WeakReference<>(getBridge());
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        if (bridgeRef.get() == getBridge()) bridgeRef = new WeakReference<>(null);
+    }
+
+    /** Page ouverte (WebView vivante), ou null. */
+    static Bridge liveBridge() {
+        return bridgeRef.get();
+    }
+
+    /** État de l'enregistrement pour le widget : { state: 'idle'|'rec'|'paused', movingMs, km }. */
+    @PluginMethod
+    public void widgetState(PluginCall call) {
+        Double ms = call.getDouble("movingMs", 0.0);
+        GpxWidget.save(getContext(), call.getString("state", "idle"), ms == null ? 0 : ms.longValue(), call.getString("km", "0,00"));
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void takeWidgetAction(PluginCall call) {
+        JSObject r = new JSObject();
+        String a = widgetAction;
+        widgetAction = null;
+        r.put("action", a == null ? "" : a);
+        call.resolve(r);
+    }
 
     @PluginMethod
     public void openOther(PluginCall call) {

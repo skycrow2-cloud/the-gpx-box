@@ -12,6 +12,8 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         String p = GpxSuitePlugin.read(this, getIntent());
         if (p != null) GpxSuitePlugin.pending = p;      // lue par la page une fois la carte prête
+        String w = getIntent() == null ? null : getIntent().getStringExtra(GpxWidget.EXTRA);
+        if (w != null) GpxSuitePlugin.widgetAction = w; // bouton du widget : traité par la page une fois prête
     }
 
     @Override
@@ -22,6 +24,12 @@ public class MainActivity extends BridgeActivity {
             GpxSuitePlugin.pending = p;
             getBridge().getWebView().post(() -> getBridge().getWebView()
                 .evaluateJavascript("window.__gpxSuiteReceive && window.__gpxSuiteReceive()", null));
+        }
+        String w = intent == null ? null : intent.getStringExtra(GpxWidget.EXTRA);
+        if (w != null && getBridge() != null) {
+            GpxSuitePlugin.widgetAction = w;
+            getBridge().getWebView().post(() -> getBridge().getWebView()
+                .evaluateJavascript("window.__gpxWidgetPending && window.__gpxWidgetPending()", null));
         }
     }
 }

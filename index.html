@@ -7063,6 +7063,7 @@
     var VIEWER_URL = 'https://skycrow2-cloud.github.io/gpx-3d-viewer/';
     var CAP = window.Capacitor;
     var SUITE = (CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.registerPlugin) ? CAP.registerPlugin('GpxSuite') : null;
+    window.__gpxSuitePlugin = SUITE;   // aussi utilisé par le widget d'enregistrement GPS
     var mapReady = false;
     function handoffGpx(trackName){
       var trkpts = points.map(function(p){
@@ -7204,10 +7205,22 @@
       var bad = !lastFix || lastFix.acc > MAX_ACC;
       document.getElementById('grbTxt').innerHTML = fmtClock(movingMs()) + ' · ' + km + ' km · <span class="grb-acc' + (bad ? ' bad' : '') + '">' + acc + '</span>';
       bar.classList.toggle('paused', !!rec.paused);
+      pushWidget(false, km);
       var pb = bar.querySelector('#grbPause');
       pb.innerHTML = rec.paused ? PLAY_SVG : PAUSE_SVG;
       pb.title = rec.paused ? 'Reprendre' : 'Pause';
       pb.setAttribute('aria-label', pb.title);
+    }
+    // --- widget Android (écran externe du razr) : état, temps en mouvement, distance ---
+    var WIDGET = window.__gpxSuitePlugin, widgetLast = '';
+    function pushWidget(force, km){
+      if(!WIDGET) return;
+      var state = rec ? (rec.paused ? 'paused' : 'rec') : 'idle';
+      if(km === undefined) km = rec ? (recDistance() / 1000).toFixed(2).replace('.', ',') : '0,00';
+      var sig = state + '|' + km;
+      if(!force && sig === widgetLast) return;
+      widgetLast = sig;
+      WIDGET.widgetState({ state: state, movingMs: movingMs(), km: km }).catch(function(){});
     }
     function save(){
       clearTimeout(saveTimer); saveTimer = null;
@@ -7316,6 +7329,7 @@
       btn.setAttribute('aria-pressed', rec ? 'true' : 'false');
       showRecLine();
       updateBar();
+      pushWidget(true);
     }
 
     // --- démarrer / reprendre / terminer ---
@@ -7334,6 +7348,7 @@
       if(rec.paused){ rec.pausedMs += Date.now() - rec.pauseAt; rec.paused = false; }
       else { rec.paused = true; rec.pauseAt = Date.now(); }
       updateBar();
+      pushWidget(true);
       save();
     }
     function rawGpx(r, name){
@@ -7462,10 +7477,28 @@
             start(pending);
           } else {
             try{ localStorage.removeItem(KEY); }catch(e){}
+            pushWidget(true);
             if(pending.pts.length >= 2){ keepRaw(pending); loadIntoEditor(pending); }
           }
         }, 400);
       });
+    }
+
+    // --- boutons du widget : démarrer (sans confirmation), pause / reprise, terminer ---
+    window.__gpxWidget = function(action){
+      if(action === 'start'){ if(!rec) start(); else if(rec.paused) togglePause(); }
+      else if(action === 'pause'){ if(rec) togglePause(); }
+      else if(action === 'stop'){ if(rec) stop(); }
+      pushWidget(true);
+    };
+    var widgetReady = false;
+    window.__gpxWidgetPending = function(){
+      if(!WIDGET || !widgetReady) return;
+      WIDGET.takeWidgetAction().then(function(r){ if(r && r.action) window.__gpxWidget(r.action); }, function(){});
+    };
+    if(WIDGET){
+      if(!pending || !pending.pts) pushWidget(true);
+      map.once('load', function(){ setTimeout(function(){ widgetReady = true; window.__gpxWidgetPending(); }, 800); });
     }
   })();
 })();
