@@ -7,5 +7,7 @@
     <string name="capacitor_background_geolocation_notification_channel_name">Enregistrement GPS</string>
     <string name="capacitor_background_geolocation_notification_icon">drawable/ic_tracking</string>
     <string name="capacitor_background_geolocation_notification_color">#E8A33D</string>
-    <string name="widget_description">Enregistrement GPS : chrono, distance, démarrer / pause / terminer. Idéal pour l\'écran externe du razr.</string>
+    <string name="widget_desc">Trace en cours : distance, dénivelé, profil</string>
+    <string name="widget_empty">The-GPX-Box — touchez pour dessiner une trace</string>
+    <string name="widget_track">Trace</string>
 </resources>

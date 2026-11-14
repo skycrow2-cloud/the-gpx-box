@@ -4165,6 +4165,7 @@
 
     updateDistanceStat();
     updateSpeedStat();
+    androidTrackChanged();
 
     clearTimeout(elevationTimer);
     elevationTimer = setTimeout(fetchElevations, 600);
@@ -4711,6 +4712,7 @@
       document.getElementById('statMax').innerHTML = '– <small>m</small>';
     }
     updateDifficulty();
+    androidTrackChanged();
   }
 
   // ---------- Profil altimétrique (SVG) ----------
@@ -7053,6 +7055,71 @@
   setPointsHidden(chkHidePoints.checked);
 
 
+  // ---------- Application Android : widget « trace en cours » + continuité entre écrans ----------
+  // Même comportement que GPX 3D :
+  // - le widget (écran d'accueil, écran externe du Motorola razr) montre la trace en cours : nom, distance, D+ / D−,
+  //   durée (si la trace est horodatée) et mini-profil d'altitude ; pendant un enregistrement GPS, la trace enregistrée ;
+  // - la trace dessinée est gardée dans le stockage local de l'application et reprise quand la page (re)démarre,
+  //   sur l'un ou l'autre écran du pliable, ou à la réouverture de l'application. Sur le site : rien.
+  var ANDROID_SUITE = (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform() && Capacitor.registerPlugin)
+    ? Capacitor.registerPlugin('GpxSuite') : null;
+  var SESSION_KEY = 'gpxbox.session', sessionReady = false, androidTimer = null;
+  window.__gpxboxWidgetOverride = null;   // résumé fourni par l'enregistrement GPS en cours (sinon : la trace de l'éditeur)
+  function widgetSummary(pts, name){
+    var n = pts.length, km = 0, up = 0, down = 0, hasEle = false, ele = [], N = Math.min(160, n);
+    function e(p){ return typeof p.ele === 'number' ? p.ele : (typeof p.gpsEle === 'number' ? p.gpsEle : null); }
+    for(var i = 1; i < n; i++){
+      km += haversine(pts[i-1], pts[i]) / 1000;
+      var a = e(pts[i-1]), b = e(pts[i]);
+      if(a !== null && b !== null){ hasEle = true; if(b > a) up += b - a; else down += a - b; }
+    }
+    for(var k = 0; k < N; k++){
+      var v = e(pts[Math.round(k * (n - 1) / Math.max(1, N - 1))]);
+      ele.push(v === null ? null : Math.round(v));
+    }
+    var t0 = null, t1 = null;
+    pts.forEach(function(p){ var t = typeof p.time === 'number' ? p.time : p.t; if(typeof t === 'number'){ if(t0 === null) t0 = t; t1 = t; } });
+    return { name: name, km: km, gain: hasEle ? up : null, loss: hasEle ? down : null,
+      durS: t0 !== null && t1 > t0 ? Math.round((t1 - t0) / 1000) : null, ele: hasEle ? ele : null };
+  }
+  function androidFlush(){
+    androidTimer = null;
+    if(!ANDROID_SUITE) return;
+    var o = window.__gpxboxWidgetOverride ? window.__gpxboxWidgetOverride()
+      : (points.length >= 2 ? widgetSummary(points, expNameEl.value.trim().replace(/\.gpx$/i, '') || 'Trace') : null);
+    ANDROID_SUITE.updateWidget({ json: JSON.stringify(o) }).catch(function(){});
+    if(!sessionReady) return;   // pas avant la reprise : on écraserait la trace gardée
+    try{
+      if(points.length) localStorage.setItem(SESSION_KEY, JSON.stringify({ pts: points, name: expNameEl.value, t: Date.now() }));
+      else localStorage.removeItem(SESSION_KEY);
+    }catch(e){ try{ localStorage.removeItem(SESSION_KEY); }catch(e2){} }   // trace trop grosse pour le stockage : pas de reprise
+  }
+  function androidTrackChanged(){
+    if(ANDROID_SUITE && !androidTimer) androidTimer = setTimeout(androidFlush, 800);
+  }
+  window.__gpxboxAndroidTrackChanged = androidTrackChanged;
+  if(ANDROID_SUITE){
+    expNameEl.addEventListener('input', androidTrackChanged);
+    window.addEventListener('pagehide', function(){ if(androidTimer){ clearTimeout(androidTimer); androidFlush(); } });
+    document.addEventListener('visibilitychange', function(){ if(document.hidden && androidTimer){ clearTimeout(androidTimer); androidFlush(); } });
+    // reprise au démarrage (avant le passage éventuel depuis GPX 3D, qui demande alors s'il faut remplacer la trace)
+    map.once('load', function(){
+      var s = null;
+      try{ s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){}
+      if(s && s.pts && s.pts.length && !points.length){
+        points = s.pts.filter(function(p){ return p && typeof p.lat === 'number' && typeof p.lng === 'number'; });
+        finishIndex = points.length ? points.length - 1 : null;
+        if(s.name) expNameEl.value = s.name;
+        rebuildMarkers();
+        redraw();
+        drawProfile();
+        fitMapToTrack();
+      }
+      sessionReady = true;
+      androidTrackChanged();
+    });
+  }
+
   // ---------- Passage The-GPX-Box ⇄ GPX 3D ----------
   // Les deux pages sont sur le même site (skycrow2-cloud.github.io) : le tracé passe par le stockage local
   // (clé 'gpxsuite.handoff'), puis l'autre page s'ouvre dans son propre onglet (réutilisé), adresse terminée par #handoff.
@@ -7063,7 +7130,6 @@
     var VIEWER_URL = 'https://skycrow2-cloud.github.io/gpx-3d-viewer/';
     var CAP = window.Capacitor;
     var SUITE = (CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.registerPlugin) ? CAP.registerPlugin('GpxSuite') : null;
-    window.__gpxSuitePlugin = SUITE;   // aussi utilisé par le widget d'enregistrement GPS
     var mapReady = false;
     function handoffGpx(trackName){
       var trkpts = points.map(function(p){
@@ -7205,22 +7271,22 @@
       var bad = !lastFix || lastFix.acc > MAX_ACC;
       document.getElementById('grbTxt').innerHTML = fmtClock(movingMs()) + ' · ' + km + ' km · <span class="grb-acc' + (bad ? ' bad' : '') + '">' + acc + '</span>';
       bar.classList.toggle('paused', !!rec.paused);
-      pushWidget(false, km);
       var pb = bar.querySelector('#grbPause');
       pb.innerHTML = rec.paused ? PLAY_SVG : PAUSE_SVG;
       pb.title = rec.paused ? 'Reprendre' : 'Pause';
       pb.setAttribute('aria-label', pb.title);
     }
-    // --- widget Android (écran externe du razr) : état, temps en mouvement, distance ---
-    var WIDGET = window.__gpxSuitePlugin, widgetLast = '';
-    function pushWidget(force, km){
-      if(!WIDGET) return;
-      var state = rec ? (rec.paused ? 'paused' : 'rec') : 'idle';
-      if(km === undefined) km = rec ? (recDistance() / 1000).toFixed(2).replace('.', ',') : '0,00';
-      var sig = state + '|' + km;
-      if(!force && sig === widgetLast) return;
-      widgetLast = sig;
-      WIDGET.widgetState({ state: state, movingMs: movingMs(), km: km }).catch(function(){});
+    // widget Android : pendant l'enregistrement, il montre la trace enregistrée (mise à jour à chaque nouveau point)
+    function widgetRec(){
+      if(!rec) return null;
+      var o = widgetSummary(rec.pts.map(function(p){ return { lat:p.lat, lng:p.lng, gpsEle:p.ele }; }),
+        (rec.paused ? '❚❚ ' : '● ') + 'Enregistrement');
+      o.durS = Math.round(movingMs() / 1000) || null;
+      return o;
+    }
+    function widgetRecSync(){
+      window.__gpxboxWidgetOverride = rec ? widgetRec : null;
+      if(window.__gpxboxAndroidTrackChanged) window.__gpxboxAndroidTrackChanged();
     }
     function save(){
       clearTimeout(saveTimer); saveTimer = null;
@@ -7262,6 +7328,7 @@
       showRecLine();
       updateBar();
       saveSoon();
+      widgetRecSync();
     }
     function onError(err){
       if(err && err.code === 1){
@@ -7329,7 +7396,7 @@
       btn.setAttribute('aria-pressed', rec ? 'true' : 'false');
       showRecLine();
       updateBar();
-      pushWidget(true);
+      widgetRecSync();
     }
 
     // --- démarrer / reprendre / terminer ---
@@ -7348,7 +7415,7 @@
       if(rec.paused){ rec.pausedMs += Date.now() - rec.pauseAt; rec.paused = false; }
       else { rec.paused = true; rec.pauseAt = Date.now(); }
       updateBar();
-      pushWidget(true);
+      widgetRecSync();
       save();
     }
     function rawGpx(r, name){
@@ -7477,28 +7544,10 @@
             start(pending);
           } else {
             try{ localStorage.removeItem(KEY); }catch(e){}
-            pushWidget(true);
             if(pending.pts.length >= 2){ keepRaw(pending); loadIntoEditor(pending); }
           }
         }, 400);
       });
-    }
-
-    // --- boutons du widget : démarrer (sans confirmation), pause / reprise, terminer ---
-    window.__gpxWidget = function(action){
-      if(action === 'start'){ if(!rec) start(); else if(rec.paused) togglePause(); }
-      else if(action === 'pause'){ if(rec) togglePause(); }
-      else if(action === 'stop'){ if(rec) stop(); }
-      pushWidget(true);
-    };
-    var widgetReady = false;
-    window.__gpxWidgetPending = function(){
-      if(!WIDGET || !widgetReady) return;
-      WIDGET.takeWidgetAction().then(function(r){ if(r && r.action) window.__gpxWidget(r.action); }, function(){});
-    };
-    if(WIDGET){
-      if(!pending || !pending.pts) pushWidget(true);
-      map.once('load', function(){ setTimeout(function(){ widgetReady = true; window.__gpxWidgetPending(); }, 800); });
     }
   })();
 })();

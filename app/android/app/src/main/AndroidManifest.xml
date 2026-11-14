@@ -30,17 +30,17 @@
 
         </activity>
 
-        <!-- Widget « Enregistrement GPS » (écran externe du Motorola razr, écran d'accueil) -->
+        <!-- widget « trace en cours » (écran d'accueil, écran externe des pliables type Motorola razr) -->
         <receiver
-            android:name=".GpxWidget"
-            android:label="Enregistrement GPS"
-            android:exported="false">
+            android:name=".TrackWidget"
+            android:exported="false"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/gpx_widget_info" />
+                android:resource="@xml/widget_track_info" />
         </receiver>
 
         <provider
