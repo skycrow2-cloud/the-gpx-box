@@ -72,7 +72,7 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:background="@drawable/wg_btn_primary"
-            android:contentDescription="Démarrer l'enregistrement"
+            android:contentDescription="Démarrer"
             android:padding="14dp"
             android:src="@drawable/ic_wg_rec" />
 
@@ -92,7 +92,7 @@
             android:layout_height="52dp"
             android:layout_marginStart="18dp"
             android:background="@drawable/wg_btn_stop"
-            android:contentDescription="Terminer l'enregistrement"
+            android:contentDescription="Terminer"
             android:padding="15dp"
             android:src="@drawable/ic_wg_stop"
             android:visibility="gone" />
