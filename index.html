@@ -1469,7 +1469,7 @@
     </div>
     <div id="osmLogin" style="display:none;">
       <button class="btn accent" id="btnOsmConnect" style="width:100%;">Se connecter à OpenStreetMap</button>
-      <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px;">Une fenêtre OSM s'ouvre pour autoriser l'accès à vos traces. <a href="#" id="lnkOsmChangeId">Autre configuration (ID client)</a></div>
+      <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px;">La page OpenStreetMap s'affiche pour autoriser l'accès à vos traces, puis revient ici. <a href="#" id="lnkOsmChangeId">Autre configuration (ID client)</a></div>
     </div>
     <div id="osmConnected" style="display:none;">
       <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;">
@@ -1666,7 +1666,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.51 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.52 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -6253,12 +6253,13 @@
     });
   }
 
+  /* connexion dans la même fenêtre (pas de fenêtre surgissante, qui ouvrait une seconde fenêtre
+     de l'application installée) : le tracé en cours est gardé le temps de l'aller-retour vers OSM */
+  var K_RET = 'gpxbox.osm.retour';
   function osmLogin(){
     var cid = osmClientId();
     if(!cid){ osmRender(); return; }
     if(!osmCanAuth()){ osmRender(); return; }
-    // fenêtre ouverte tout de suite (geste utilisateur), adresse fixée après le calcul PKCE
-    var w = window.open('', 'osm_oauth', 'width=520,height=700');
     var verifier = randStr(48), state = randStr(16);
     osmPending = { verifier: verifier, state: state };
     lsSet('gpxbox.osm.pkce', JSON.stringify(osmPending));
@@ -6267,10 +6268,14 @@
         response_type: 'code', client_id: cid, redirect_uri: osmRedirectUri(),
         scope: OSM_SCOPE, state: state, code_challenge: b64url(hash), code_challenge_method: 'S256'
       }).toString();
-      if(w && !w.closed){ w.location.href = url; osmStatus('Autorisez l\'accès dans la fenêtre OpenStreetMap…'); }
-      else if(!points.length || confirm('Fenêtre surgissante bloquée : la page va être redirigée vers OSM et la trace en cours sera perdue. Continuer ?')){
-        location.href = url;
+      var kept = true;
+      if(points.length){
+        try{ sessionStorage.setItem(K_RET, JSON.stringify({ gpx: buildGpxText('Trace'), name: 'Trace' })); }
+        catch(e){ kept = false; }   // tracé trop volumineux pour le stockage de session
       }
+      if(!kept && !confirm('Le tracé en cours est trop volumineux pour être gardé pendant la connexion à OSM : il faudra le recharger ensuite. Continuer ?')) return;
+      osmStatus('Connexion…');
+      location.href = url;
     });
   }
 
@@ -6450,12 +6455,22 @@
     osmRender();
   });
   // Fenêtre surgissante bloquée : la page principale a été redirigée et reçoit le code elle-même
-  if(window.__osmPendingCallback){
+  // différé : la suite de l'initialisation (GPX_SOURCES, etc.) doit être faite avant d'afficher le panneau
+  if(window.__osmPendingCallback) setTimeout(function(){
+    // retour d'OpenStreetMap dans la même fenêtre : on remet le tracé gardé, une fois la carte prête
+    var ret = null;
+    try{ ret = JSON.parse(sessionStorage.getItem(K_RET) || 'null'); sessionStorage.removeItem(K_RET); }catch(e){}
+    if(ret && ret.gpx){
+      var restore = function(){
+        try{ var g = gpxTextToCoords(ret.gpx); if(g.coords.length >= 1) applyOsmImport(g.coords, g.name || ret.name || 'Trace'); }catch(e){}
+      };
+      if(map.loaded()) restore(); else map.once('load', restore);
+    }
     document.getElementById('osmPanel').style.display = 'block';
     osmRender();
     osmHandleCode(window.__osmPendingCallback);
     window.__osmPendingCallback = null;
-  }
+  }, 0);
 
   // ---------- Panneau OSM : onglets Importer / Envoyer ; import de Mes traces, d'une autre trace ou d'un itinéraire balisé ----------
   var osmPanelEl = document.getElementById('osmPanel');
