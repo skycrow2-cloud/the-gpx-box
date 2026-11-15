@@ -388,7 +388,18 @@
     transform:rotate(-90deg);
     accent-color:var(--accent);
     cursor:pointer;
+    -webkit-appearance:none;appearance:none;background:transparent;margin:0;height:22px;
   }
+  /* barre d'assiette orange, curseur « verre » à point orange (comme GPX 3D) */
+  .pitch-control input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:99px;background:var(--accent);}
+  .pitch-control input[type=range]::-moz-range-track{height:4px;border-radius:99px;background:var(--accent);}
+  .pitch-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:var(--pitch-thumb, 18px);height:var(--pitch-thumb, 18px);
+    margin-top:calc((4px - var(--pitch-thumb, 18px)) / 2);border-radius:50%;border:1px solid rgba(232,163,61,.35);box-shadow:0 2px 8px rgba(0,0,0,.45);
+    background:radial-gradient(circle, var(--accent) 0 26%, transparent 30%), linear-gradient(var(--glass-strong), var(--glass-strong)), var(--bg, #0f141b);}
+  .pitch-control input[type=range]::-moz-range-thumb{width:var(--pitch-thumb, 18px);height:var(--pitch-thumb, 18px);box-sizing:border-box;
+    border-radius:50%;border:1px solid rgba(232,163,61,.35);box-shadow:0 2px 8px rgba(0,0,0,.45);
+    background:radial-gradient(circle, var(--accent) 0 26%, transparent 30%), linear-gradient(var(--glass-strong), var(--glass-strong)), var(--bg, #0f141b);}
+  @media (pointer:coarse){ .pitch-control input[type=range]{--pitch-thumb:22px;height:32px;} }
   #pitchTooltip{
     position:absolute;
     right:54px;
@@ -1666,7 +1677,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.53 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.54 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
