@@ -1666,7 +1666,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.52 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.53 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -1894,6 +1894,16 @@
     attributionControl: { compact:true }
   });
   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}), 'top-right');
+  // GSM : attributions repliées en bas à droite (seul le « i » reste visible, un clic affiche le texte)
+  (function(){
+    var mq = window.matchMedia('(max-width:760px), (max-height:500px) and (orientation:landscape)');
+    function fold(){
+      if(!mq.matches) return;
+      var a = document.querySelector('#map .maplibregl-ctrl-attrib');
+      if(a) a.classList.remove('maplibregl-compact-show');
+    }
+    fold(); map.once('load', fold); setTimeout(fold, 0);
+  })();
 
   // ---------- Mini-carte : reste centrée sur la trace ----------
   var miniMap = null, miniReady = false, miniDotTimer = null;
