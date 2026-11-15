@@ -6206,7 +6206,8 @@
     return own || OSM_BUILTIN_CLIENT_ID;
   }
   function osmToken(){ return lsGet('gpxbox.osm.token') || ''; }
-  function osmRedirectUri(){ return location.origin + location.pathname; }
+  // une seule adresse à déclarer sur OSM, que la page soit ouverte en …/ ou en …/index.html
+  function osmRedirectUri(){ return location.origin + location.pathname.replace(/index\.html$/, ''); }
   function b64url(bytes){
     var s = ''; bytes = new Uint8Array(bytes);
     for(var i=0;i<bytes.length;i++) s += String.fromCharCode(bytes[i]);
