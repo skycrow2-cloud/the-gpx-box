@@ -1344,7 +1344,7 @@
           <li><span class="di" data-ic="empty"></span><span><b>Importer › Autre trace</b> : coller le lien ou le numéro d'une trace d'un autre utilisateur. Les traces « publiques » ou « identifiables » sont lues directement (vos traces privées aussi si vous êtes connecté) ; sinon un lien de téléchargement est proposé, puis le fichier obtenu se charge depuis le panneau.</span></li>
           <li><span class="di" data-ic="empty"></span><span><b>Importer › Itinéraire</b> : saisir un nom ou un numéro de balisage (GR 5…) pour chercher les itinéraires balisés de la zone visible, ou coller un numéro de relation, un lien openstreetmap.org/relation/… ou Waymarked Trails. Le champ vide liste les itinéraires de la zone. Variantes et excursions écartées ; altitudes calculées ; plus de 500 points : trace simplifiée en gardant virages, sommets et cols.</span></li>
           <li><span class="di" data-ic="empty"></span><span><b>Envoyer</b> la trace actuelle sur votre compte, avec une description (obligatoire), des étiquettes et la visibilité (identifiable ou traçable). OSM exige un horodatage : des heures fictives à 4 km/h sont ajoutées.</span></li>
-          <li><span class="di" data-ic="empty"></span><span><b>Première utilisation</b> : déclarer l'application sur openstreetmap.org (Mes applications OAuth 2, application non confidentielle, droits « traces GPS ») avec l'URI de redirection affichée, puis coller l'ID client. La page doit être ouverte en https:// ou sur http://localhost.</span></li>
+          <li><span class="di" data-ic="empty"></span><span><b>Connexion</b> : rien à configurer, The-GPX-Box est déjà déclarée sur openstreetmap.org ; « Se connecter à OpenStreetMap », puis autoriser avec votre propre compte. <b>Autre configuration</b> : le lien « Autre configuration (ID client) » permet d'utiliser votre propre application OSM (non confidentielle, droits « traces GPS », URI de redirection affichée) ; « Utiliser la configuration intégrée » revient à l'ID par défaut. La page doit être ouverte en https:// ou sur http://localhost.</span></li>
         </ul>
 
         <h3>Exporter</h3>
@@ -1454,6 +1454,7 @@
 
     <div id="osmAccount">
     <div id="osmSetup" style="display:none;">
+      <div class="osm-builtin-note" style="font-size:12px;margin-bottom:6px;" hidden><b>Facultatif.</b> The-GPX-Box est déjà déclarée sur OpenStreetMap : rien à configurer. Pour utiliser plutôt votre propre application OSM, suivez les étapes ci-dessous.</div>
       <div style="font-size:12px;margin-bottom:4px;">Première utilisation : déclarer l'application sur OpenStreetMap (gratuit, une seule fois).</div>
       <ol>
         <li>Connecté à OSM, ouvrir <a href="https://www.openstreetmap.org/oauth2/applications/new" target="_blank" rel="noopener">Mes applications OAuth 2</a>.</li>
@@ -1464,10 +1465,11 @@
       </ol>
       <input type="text" id="osmClientId" placeholder="ID client OSM" autocomplete="off">
       <button class="btn accent" id="btnOsmSaveId" style="width:100%;">Enregistrer l'ID client</button>
+      <button class="btn" id="btnOsmBuiltin" type="button" style="width:100%;margin-top:6px;" hidden>Utiliser la configuration intégrée</button>
     </div>
     <div id="osmLogin" style="display:none;">
       <button class="btn accent" id="btnOsmConnect" style="width:100%;">Se connecter à OpenStreetMap</button>
-      <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px;">Une fenêtre OSM s'ouvre pour autoriser l'accès à vos traces. <a href="#" id="lnkOsmChangeId">Changer l'ID client</a></div>
+      <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px;">Une fenêtre OSM s'ouvre pour autoriser l'accès à vos traces. <a href="#" id="lnkOsmChangeId">Autre configuration (ID client)</a></div>
     </div>
     <div id="osmConnected" style="display:none;">
       <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;">
@@ -1664,7 +1666,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.50 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.51 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -6192,7 +6194,17 @@
 
   function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function lsSet(k, v){ try{ if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
-  function osmClientId(){ return lsGet('gpxbox.osm.clientId') || ''; }
+  /* ID client de l'application déclarée sur openstreetmap.org : public par nature (OAuth 2 PKCE,
+     application non confidentielle, aucun secret). Chacun se connecte avec son propre compte.
+     Une autre configuration reste possible : « Autre configuration » enregistre un ID personnel,
+     prioritaire ; la valeur 'integre' force le retour à cet ID. */
+  var OSM_BUILTIN_CLIENT_ID = 'J1EtVexl83yjdoASy4jgx7WLygYfarQru6iD89fct7k';
+  var OSM_BUILTIN = 'integre';
+  function osmClientId(){
+    var own = lsGet('gpxbox.osm.clientId');
+    if(own === OSM_BUILTIN) return OSM_BUILTIN_CLIENT_ID;
+    return own || OSM_BUILTIN_CLIENT_ID;
+  }
   function osmToken(){ return lsGet('gpxbox.osm.token') || ''; }
   function osmRedirectUri(){ return location.origin + location.pathname; }
   function b64url(bytes){
@@ -6217,6 +6229,8 @@
     var cid = osmClientId(), tok = osmToken();
     document.getElementById('osmRedirectShow').textContent = osmRedirectUri();
     document.getElementById('osmSetup').style.display = cid ? 'none' : 'block';
+    document.getElementById('btnOsmBuiltin').hidden = !OSM_BUILTIN_CLIENT_ID;
+    document.querySelectorAll('#osmPanel .osm-builtin-note').forEach(function(n){ n.hidden = !OSM_BUILTIN_CLIENT_ID; });
     document.getElementById('osmLogin').style.display = (cid && !tok) ? 'block' : 'none';
     document.getElementById('osmConnected').style.display = (cid && tok) ? 'block' : 'none';
     document.getElementById('osmUserName').textContent = osmUser || '…';
@@ -6406,8 +6420,19 @@
   });
   document.getElementById('lnkOsmChangeId').addEventListener('click', function(ev){
     ev.preventDefault();
-    document.getElementById('osmClientId').value = osmClientId();
+    var cur = osmClientId();
+    document.getElementById('osmClientId').value = (cur === OSM_BUILTIN_CLIENT_ID) ? '' : cur;
     lsSet('gpxbox.osm.clientId', null);
+    lsSet('gpxbox.osm.token', null);
+    osmRender();
+    // l'ID intégré resterait actif : on force l'écran de saisie
+    document.getElementById('osmSetup').style.display = 'block';
+    document.getElementById('osmLogin').style.display = 'none';
+  });
+  document.getElementById('btnOsmBuiltin').addEventListener('click', function(){
+    lsSet('gpxbox.osm.clientId', OSM_BUILTIN);
+    lsSet('gpxbox.osm.token', null);
+    osmStatus('');
     osmRender();
   });
   document.getElementById('btnOsmConnect').addEventListener('click', osmLogin);
