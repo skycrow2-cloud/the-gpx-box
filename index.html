@@ -1139,6 +1139,8 @@
     border:1px solid var(--border);background:var(--panel-2);color:var(--accent);cursor:pointer;touch-action:manipulation;}
   #gpsRecBar button.on{background:var(--accent);border-color:var(--accent);color:#1b1206;}
   #gpsRecBar #grbStop{background:#d9342b;border-color:#d9342b;color:#fff;}
+  .vertex-ghost{pointer-events:none;opacity:.4;filter:grayscale(.3);}
+  .vertex-ghost .vertex-num{outline:2px dashed rgba(255,255,255,.8);outline-offset:1px;box-shadow:none !important;}
 </style>
 </head>
 <body>
@@ -1677,7 +1679,7 @@
     </div>
   </div>
 
-  <footer>© A. Legat · v6.56 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
+  <footer>© A. Legat · v6.57 · Photo aérienne © Esri · Fond topo © OpenTopoMap (CC-BY-SA) · Relief et altitudes (MNT) © AWS Terrain Tiles · Météo © Open-Meteo · Recherche © Nominatim/OSM</footer>
   <div id="vertexTooltip"></div>
   <div id="cursorLabel" aria-hidden="true"></div>
 </div>
@@ -4058,6 +4060,48 @@
     if(tooltipCursorEl){ tooltipCursorEl.style.cursor = CURSOR_GRAB; tooltipCursorEl = null; }
   }
 
+  // ---------- Fantôme pendant le déplacement d'un point ----------
+  // position d'origine (point estompé) + segments en pointillés vers les voisins
+  var dragGhostMk = null;
+  function dragGhostEnsureLayer(){
+    if(!map.getSource('drag-preview')){
+      map.addSource('drag-preview', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
+    }
+    if(!map.getLayer('drag-preview')){
+      map.addLayer({ id:'drag-preview', type:'line', source:'drag-preview',
+        layout:{ 'line-cap':'round', 'line-join':'round' },
+        paint:{ 'line-color': (document.getElementById('trackColor') || {}).value || '#e8a33d',
+                'line-width':3, 'line-opacity':0.9, 'line-dasharray':[1.5, 1.5] } });
+    }
+  }
+  function dragGhostStart(i, innerEl){
+    dragGhostEnd();
+    var p = points[i]; if(!p) return;
+    var g = document.createElement('div');
+    g.className = 'vertex-wrap vertex-ghost' + (innerEl.parentNode && innerEl.parentNode.classList.contains('vertex-flag') ? ' vertex-flag' : '');
+    var gi = innerEl.cloneNode(true);
+    gi.removeAttribute('title');
+    g.appendChild(gi);
+    dragGhostMk = new maplibregl.Marker({ element:g }).setLngLat([p.lng, p.lat]).addTo(map);
+    try{ dragGhostEnsureLayer(); }catch(e){}
+  }
+  function dragGhostMove(i, ll){
+    var src = map.getSource('drag-preview'); if(!src) return;
+    var nb = [];
+    if(i > 0) nb.push(points[i-1]);
+    if(i < points.length - 1) nb.push(points[i+1]);
+    if(i === 0 && isClosedLoopTrace() && points.length > 2) nb.push(points[points.length - 2]);
+    src.setData({ type:'FeatureCollection', features: nb.filter(Boolean).map(function(q){
+      return { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:[[q.lng, q.lat], [ll.lng, ll.lat]] } };
+    }) });
+  }
+  function dragGhostEnd(){
+    if(dragGhostMk){ dragGhostMk.remove(); dragGhostMk = null; }
+    var src = map.getSource('drag-preview');
+    if(src) src.setData({ type:'FeatureCollection', features:[] });
+  }
+
+  var vertexLongPressTimer = null, vertexLongPressAt = 0;
   function rebuildMarkers(){
     if(typeof updateIdleCursor === "function") setTimeout(updateIdleCursor, 0);
     markers.forEach(function(m){ m.remove(); });
@@ -4076,13 +4120,19 @@
       var marker = new maplibregl.Marker({ element: els.wrapper, draggable: !pointsHidden })
         .setLngLat([p.lng, p.lat])
         .addTo(map);
+      marker.on('dragstart', function(){
+        clearTimeout(vertexLongPressTimer);
+        dragGhostStart(i, els.inner);
+      });
       marker.on('drag', function(){
         var ll = marker.getLngLat();
         var coords = points.map(function(p, k){ return k === i ? [ll.lng, ll.lat] : [p.lng, p.lat]; });
         miniSetTrack(coords);
         miniShowDot(ll.lng, ll.lat);
+        dragGhostMove(i, ll);
       });
       marker.on('dragend', function(){
+        dragGhostEnd();
         var ll = marker.getLngLat();
         miniShowDot(ll.lng, ll.lat, 1500);
         updateVertexPosition(i, ll);
@@ -4090,9 +4140,29 @@
       els.inner.addEventListener('contextmenu', function(ev){
         ev.preventDefault();
         ev.stopPropagation();
-        if(pointsHidden) return;
+        clearTimeout(vertexLongPressTimer);
+        if(pointsHidden || Date.now() - vertexLongPressAt < 1500) return;   // déjà supprimé par l'appui long
         removeVertex(i);
       });
+      // Appui long au doigt = suppression (iPhone : Safari n'émet pas « contextmenu »)
+      els.inner.style.webkitTouchCallout = 'none';
+      els.inner.addEventListener('touchstart', function(ev){
+        clearTimeout(vertexLongPressTimer);
+        if(pointsHidden || ev.touches.length !== 1) return;
+        var t0 = ev.touches[0], x0 = t0.clientX, y0 = t0.clientY;
+        function cancel(){ clearTimeout(vertexLongPressTimer); els.inner.removeEventListener('touchmove', mv); }
+        function mv(e){ var t = e.touches[0]; if(Math.abs(t.clientX - x0) > 8 || Math.abs(t.clientY - y0) > 8) cancel(); }
+        els.inner.addEventListener('touchmove', mv, { passive:true });
+        els.inner.addEventListener('touchend', cancel, { once:true });
+        els.inner.addEventListener('touchcancel', cancel, { once:true });
+        vertexLongPressTimer = setTimeout(function(){
+          cancel();
+          if(Date.now() - vertexLongPressAt < 1500) return;
+          vertexLongPressAt = Date.now();
+          if(navigator.vibrate) try{ navigator.vibrate(30); }catch(e){}
+          removeVertex(i);
+        }, 600);
+      }, { passive:true });
       els.inner.addEventListener('mouseenter', function(){ scheduleVertexTooltip(els.inner, i); });
       els.inner.addEventListener('mouseleave', hideVertexTooltip);
       els.inner.addEventListener('mousedown', hideVertexTooltip);
